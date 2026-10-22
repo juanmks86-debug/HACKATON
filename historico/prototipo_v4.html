@@ -1,0 +1,500 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JujuyConecta - Hackathon INNOA</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for ML and Analytics charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        if (window.tailwind) tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        jujuy: {
+                            red: '#E53E3E',
+                            orange: '#DD6B20',
+                            yellow: '#D69E2E',
+                            lime: '#84CC16',
+                            blue: '#3182CE',
+                            purple: '#6B46C1',
+                            dark: '#1A202C'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .high-contrast {
+            filter: contrast(140%) brightness(95%);
+            background-color: #000000 !important;
+            color: #FFFF00 !important;
+        }
+        .high-contrast header, .high-contrast footer, .high-contrast div, .high-contrast card {
+            background-color: #121212 !important;
+            border-color: #FFFF00 !important;
+            color: #FFFFFF !important;
+        }
+        .high-contrast button {
+            background-color: #FFFF00 !important;
+            color: #000000 !important;
+            font-weight: bold !important;
+        }
+        .carousel-item {
+            display: none;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .carousel-item.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col transition-all duration-300" id="body-app">
+
+    <!-- 1. BARRA DE ACCESIBILIDAD UNIVERSAL -->
+    <div class="bg-jujuy-dark text-white px-4 py-2 text-xs md:text-sm flex flex-wrap justify-between items-center shadow-md z-50">
+        <div class="flex items-center space-x-2">
+            <span class="font-bold tracking-wide flex items-center gap-1">
+                <i data-lucide="accessibility" class="w-4 h-4 text-amber-400"></i> Accesibilidad Universal:
+            </span>
+            <button onclick="toggleTextToSpeech()" id="btn-tts" class="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded flex items-center gap-1 transition">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> <span id="lbl-tts">Lectura de Voz (OFF)</span>
+            </button>
+        </div>
+        <div class="flex items-center space-x-3 mt-1 sm:mt-0">
+            <!-- Fuente -->
+            <div class="flex items-center bg-gray-700 rounded px-1">
+                <button onclick="changeFontSize(-1)" class="px-2 py-0.5 hover:bg-gray-600 rounded font-bold" title="Reducir letra">A-</button>
+                <button onclick="changeFontSize(0)" class="px-2 py-0.5 hover:bg-gray-600 rounded font-bold" title="Tamaño normal">A</button>
+                <button onclick="changeFontSize(1)" class="px-2 py-0.5 hover:bg-gray-600 rounded font-bold" title="Aumentar letra">A+</button>
+            </div>
+            <!-- Alto Contraste -->
+            <button onclick="toggleHighContrast()" class="bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold px-2 py-1 rounded flex items-center gap-1">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i> Alto Contraste
+            </button>
+            <!-- Selector Idioma -->
+            <select id="lang-selector" onchange="changeLanguage(this.value)" class="bg-gray-700 text-white rounded px-2 py-1 text-xs border border-gray-600 focus:outline-none">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+                <option value="qu">Runasimi (Quechua)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ENCABEZADO Y NAVEGACIÓN -->
+    <header class="bg-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('community')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-500 via-yellow-500 to-green-500 flex items-center justify-center text-white font-black text-xl shadow">
+                    J
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl leading-none text-gray-900 tracking-tight">Jujuy<span class="text-amber-600">Conecta</span></h1>
+                    <p class="text-xs text-gray-500 font-medium">Municipalidad de San Salvador de Jujuy</p>
+                </div>
+            </div>
+
+            <!-- DUAL LOGIN SELECTOR -->
+            <nav class="flex items-center space-x-2 bg-gray-100 p-1 rounded-xl">
+                <button id="nav-btn-community" onclick="switchView('community')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition-all bg-white text-gray-900 shadow">
+                    <i data-lucide="users" class="w-4 h-4 text-amber-600"></i>
+                    <span id="txt-nav-community">Comunidad</span>
+                </button>
+                <button id="nav-btn-business" onclick="switchView('business')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition-all text-gray-600 hover:text-gray-900">
+                    <i data-lucide="store" class="w-4 h-4 text-emerald-600"></i>
+                    <span id="txt-nav-business">Red Empresarial</span>
+                </button>
+                <button id="nav-btn-admin" onclick="openAdminModal()" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold flex items-center gap-1.5 transition-all text-gray-600 hover:text-gray-900">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-indigo-600"></i>
+                    <span id="txt-nav-admin">Acceso Municipio</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ========================================== -->
+        <!-- SECCIÓN 1: COMUNIDAD (VECINOS Y TURISTAS) -->
+        <!-- ========================================== -->
+        <section id="view-community" class="space-y-8">
+            <!-- GANCHO Y FILTRO HORARIO -->
+            <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-2xl p-6 md:p-8 text-white shadow-xl">
+                <div class="max-w-2xl">
+                    <h2 class="text-2xl md:text-4xl font-extrabold mb-2" id="txt-hero-title">Descubrí eventos en Jujuy</h2>
+                    <p class="text-amber-100 text-sm md:text-base mb-6" id="txt-hero-sub">Explorá actividades culturales, ferias y talleres. Los eventos de esta versión son ejemplos, no una agenda actualizada.</p>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs uppercase font-bold tracking-wider self-center mr-2">Filtrar por horario:</span>
+                        <button onclick="filterEventsByTime('all')" class="bg-white/20 hover:bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-white/30 active text-white" id="filter-btn-all">Todos</button>
+                        <button onclick="filterEventsByTime('Manana')" class="bg-white/20 hover:bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-white/30 text-white" id="filter-btn-manana">🌅 Mañana</button>
+                        <button onclick="filterEventsByTime('Tarde')" class="bg-white/20 hover:bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-white/30 text-white" id="filter-btn-tarde">☀️ Tarde</button>
+                        <button onclick="filterEventsByTime('Noche')" class="bg-white/20 hover:bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-white/30 text-white" id="filter-btn-noche">🌙 Noche</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3"><div><h3 class="font-bold text-emerald-950">📣 Novedades de eventos en WhatsApp</h3><p class="text-sm text-emerald-900 mt-1">Próximamente podrás seguir el canal de difusión de JujuyConecta. La publicación automática en Canales no está disponible en la API oficial de WhatsApp: esta integración requiere definir un procedimiento de publicación compatible.</p></div><span class="shrink-0 rounded-full border border-emerald-400 text-emerald-800 font-semibold text-xs px-3 py-1">Próximamente</span></div>
+
+             <!-- CARRUSEL DE TOP 5 EVENTOS DESTACADOS -->
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-amber-500"></i>
+                        Top 5 Eventos Destacados
+                    </h3>
+                    <div class="flex space-x-2">
+                        <button onclick="prevSlide()" class="p-2 rounded-full bg-white shadow hover:bg-gray-100"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                        <button onclick="nextSlide()" class="p-2 rounded-full bg-white shadow hover:bg-gray-100"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                    </div>
+                </div>
+
+                <div class="relative overflow-hidden rounded-2xl shadow-lg bg-white h-72 md:h-80" id="carousel-container">
+                    <!-- Item 1 -->
+                    <div class="carousel-item active absolute inset-0 transition-opacity duration-500">
+                        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover" alt="Noche de las Hamburguesas">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 flex flex-col justify-end text-white">
+                            <span class="bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-md w-max mb-2">Gastronomía • Noche</span>
+                            <h4 class="text-2xl font-bold">La Noche de las Hamburguesas Jujuy</h4>
+                            <p class="text-gray-200 text-sm mt-1">Paseo Sarmiento - Descuentos especiales y música en vivo.</p>
+                        </div>
+                    </div>
+                    <!-- Item 2 -->
+                    <div class="carousel-item absolute inset-0 transition-opacity duration-500">
+                        <img src="https://images.unsplash.com/photo-1509315811355-532c99176e1e?auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover" alt="Feria del Parque San Martín">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 flex flex-col justify-end text-white">
+                            <span class="bg-amber-600 text-white text-xs font-bold px-2.5 py-1 rounded-md w-max mb-2">Feria • Tarde</span>
+                            <h4 class="text-2xl font-bold">Gran Feria Emprendedora Parque San Martín</h4>
+                            <p class="text-gray-200 text-sm mt-1">Más de 100 artesanos y gastronómicos locales.</p>
+                        </div>
+                    </div>
+                    <!-- Item 3 -->
+                    <div class="carousel-item absolute inset-0 transition-opacity duration-500">
+                        <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover" alt="Taller CPV Campo Verde">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 flex flex-col justify-end text-white">
+                            <span class="bg-emerald-600 text-white text-xs font-bold px-2.5 py-1 rounded-md w-max mb-2">Capacitación • Mañana</span>
+                            <h4 class="text-2xl font-bold">Taller de Innovación Digital en CPV Campo Verde</h4>
+                            <p class="text-gray-200 text-sm mt-1">Capacitación gratuita sobre herramientas B2B para vecinos.</p>
+                        </div>
+                    </div>
+                    <!-- Item 4 -->
+                    <div class="carousel-item absolute inset-0 transition-opacity duration-500">
+                        <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover" alt="Festival de Música en La Viña">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 flex flex-col justify-end text-white">
+                            <span class="bg-purple-600 text-white text-xs font-bold px-2.5 py-1 rounded-md w-max mb-2">Música • Noche</span>
+                            <h4 class="text-2xl font-bold">Festival Folklórico en La Viña</h4>
+                            <p class="text-gray-200 text-sm mt-1">Artistas en vivo y ballets jujeños en la plaza principal.</p>
+                        </div>
+                    </div>
+                    <!-- Item 5 -->
+                    <div class="carousel-item absolute inset-0 transition-opacity duration-500">
+                        <img src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80" class="w-full h-full object-cover" alt="Mercado Artesanal">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 flex flex-col justify-end text-white">
+                            <span class="bg-blue-600 text-white text-xs font-bold px-2.5 py-1 rounded-md w-max mb-2">Cultura • Tarde</span>
+                            <h4 class="text-2xl font-bold">Exposición de Textiles Autóctonos</h4>
+                            <p class="text-gray-200 text-sm mt-1">Centro Cultural Manuel Belgrano (Vieja Estación).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BUSCADOR & EVENTOS GRID + MAPA DETALLADO -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- LISTA DE EVENTOS -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-2">
+                        <i data-lucide="search" class="w-5 h-5 text-gray-400 self-center"></i>
+                        <input type="text" id="input-search-event" onkeyup="searchEvents()" placeholder="Buscar por evento, barrio, taller o rubro..." class="w-full focus:outline-none text-sm">
+                    </div>
+
+                    <p class="text-xs text-gray-500">Los análisis inteligentes de esta demostración son ilustrativos; aún no están conectados a un modelo predictivo.</p>
+                    <div id="events-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Generado dinámicamente con JS -->
+                    </div>
+                </div>
+
+                <!-- MAPA CON TRANSPORTE Y PRECIOS -->
+                <div class="bg-white p-5 rounded-xl shadow-md border border-gray-100 flex flex-col h-fit">
+                    <h4 class="font-bold text-gray-900 text-lg mb-2 flex items-center gap-2">
+                        <i data-lucide="map-pin" class="w-5 h-5 text-red-500"></i> Ubicación y Colectivos
+                    </h4>
+                    <p class="text-xs text-gray-500 mb-4">Seleccioná un evento para ver cómo llegar y costo de entrada.</p>
+
+                    <!-- Simulación de Mapa -->
+                    <div class="bg-slate-100 rounded-xl h-64 relative overflow-hidden flex items-center justify-center border border-gray-200 mb-4" id="simulated-map">
+                        <div class="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                        <!-- Marcadores Simulados -->
+                        <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center animate-bounce">
+                            <i data-lucide="map-pin" class="w-8 h-8 text-red-600 fill-red-200 mx-auto"></i>
+                            <span class="bg-gray-900 text-white text-[10px] px-2 py-0.5 rounded shadow" id="map-pin-title">Paseo Sarmiento</span>
+                        </div>
+                    </div>
+
+                    <div id="map-details" class="bg-gray-50 p-3 rounded-lg border border-gray-200 space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-gray-700">Líneas de Colectivo cercanas:</span>
+                            <span class="bg-blue-100 text-blue-800 font-extrabold px-2 py-0.5 rounded" id="map-bus">Línea 14, 21, 38</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-gray-700">Costo de Entrada / Stand:</span>
+                            <span class="bg-green-100 text-green-800 font-extrabold px-2 py-0.5 rounded" id="map-price">GRATUITO</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECCIÓN 2: RED EMPRESARIAL (EMPRENDEDORES) -->
+        <!-- ========================================== -->
+        <section id="view-business" class="hidden space-y-8">
+            <div class="bg-slate-900 text-white p-6 md:p-8 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <span class="bg-emerald-500/20 text-emerald-400 font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider">Red B2B Empresarial</span>
+                    <h2 class="text-2xl md:text-3xl font-extrabold mt-2">¿Te interesa impulsar tu negocio?</h2>
+                    <p class="text-slate-300 text-sm mt-1">Creá tu evento comercial o unite a ferias locales con otros emprendedores de Jujuy.</p>
+                </div>
+                <button onclick="document.getElementById('b2b-form').scrollIntoView({behavior:'smooth'})" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-6 py-3 rounded-xl shadow transition whitespace-nowrap">
+                    + Crear Evento Comercial
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="store" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-gray-900">Ferias Gastronómicas</h3>
+                    <p class="text-xs text-gray-500 mt-1">Conectá con proveedores local y participá en food-trucks.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="wrench" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-gray-900">Talleres y Oficios</h3>
+                    <p class="text-xs text-gray-500 mt-1">Sumate a capacitaciones de la Municipalidad para PyMEs.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="palette" class="w-6 h-6"></i></div>
+                    <h3 class="font-bold text-lg">Artesanías y cultura</h3><p class="text-xs text-gray-500 mt-1">Vinculá tu emprendimiento con ferias y actividades locales.</p>
+                </div>
+            </div>
+            <div id="b2b-form" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+                <h3 class="text-xl font-bold">Proponer un evento comercial</h3>
+                <p class="text-sm text-gray-500">Formulario demostrativo. La creación real requerirá iniciar sesión como organizador y conectar Supabase.</p>
+                <form id="event-proposal-form" class="grid md:grid-cols-2 gap-4">
+                    <label class="text-sm font-semibold">Nombre del evento<input required name="nombre" maxlength="100" class="mt-1 w-full rounded-lg border border-gray-300 p-3" placeholder="Ej.: Feria de emprendedores"></label>
+                    <label class="text-sm font-semibold">Barrio / ubicación<input required name="ubicacion" maxlength="120" class="mt-1 w-full rounded-lg border border-gray-300 p-3" placeholder="Ej.: Centro"></label>
+                    <label class="text-sm font-semibold">Fecha<input required type="date" name="fecha" class="mt-1 w-full rounded-lg border border-gray-300 p-3"></label>
+                    <label class="text-sm font-semibold">Categoría<select name="categoria" class="mt-1 w-full rounded-lg border border-gray-300 p-3"><option>Gastronomía</option><option>Feria</option><option>Capacitación</option><option>Cultura</option></select></label>
+                    <button type="submit" class="md:col-span-2 bg-emerald-600 text-white font-bold rounded-lg px-4 py-3">Validar propuesta (demo)</button>
+                </form>
+                <p id="proposal-feedback" aria-live="polite" class="text-sm"></p>
+            </div>
+        </section>
+        <!-- Panel de demostración. No es una ruta privada ni reemplaza autorización en servidor. -->
+        <section id="view-dashboard" class="hidden space-y-6">
+            <div class="flex flex-wrap justify-between items-start gap-4">
+                <div><span class="text-xs font-bold uppercase tracking-wider text-indigo-700">Vista demostrativa · Municipio</span><h2 class="text-3xl font-extrabold mt-1">Panel municipal</h2><p class="text-sm text-gray-600 mt-2">Indicadores ilustrativos. No provienen de GA4 ni de Supabase.</p></div>
+                <button onclick="leaveDashboard()" class="border border-gray-300 rounded-lg px-4 py-2 font-semibold bg-white hover:bg-gray-50">Salir de la vista demo</button>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" id="metrics-grid"></div>
+            <div class="grid lg:grid-cols-2 gap-5">
+                <div class="bg-white border border-gray-200 rounded-xl p-5"><h3 class="font-bold mb-4">Interés por categoría (datos de muestra)</h3><div class="relative h-72"><canvas id="category-chart"></canvas></div></div>
+                <div class="bg-white border border-gray-200 rounded-xl p-5"><h3 class="font-bold mb-4">Vistas por evento (datos de muestra)</h3><div class="relative h-72"><canvas id="views-chart"></canvas></div></div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-5"><h3 class="font-bold mb-3">Lectura administrativa de predicciones</h3><p class="text-sm text-gray-600 mb-3">En producción se mostrarán valores estimados, fecha de generación, nivel de confianza y comparación con resultados reales. Los textos públicos son una representación resumida y no sustituyen esas métricas.</p><div id="admin-predictions" class="space-y-3"></div></div>
+        </section>
+    </main>
+    <footer class="bg-jujuy-dark text-white px-4 py-6 text-center text-sm mt-8"><strong>JujuyConecta</strong> · Prototipo demostrativo para Hackathon INNOA <p class="text-gray-300 text-xs mt-2">Proyecto conceptual no afiliado oficialmente a la Municipalidad. Los eventos, transportes, costos e indicadores incluidos son datos de ejemplo.</p></footer>
+    <div id="admin-modal" class="hidden fixed inset-0 z-[100] bg-black/60 p-4 items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button onclick="closeAdminModal()" class="absolute top-3 right-4 text-gray-500 p-2" aria-label="Cerrar"><i data-lucide="x"></i></button>
+            <div class="w-12 h-12 bg-indigo-100 text-indigo-700 rounded-xl flex items-center justify-center"><i data-lucide="shield-check"></i></div>
+            <h2 id="admin-modal-title" class="font-extrabold text-xl mt-4">Acceso Municipio</h2>
+            <p class="text-sm text-gray-600 mt-2">Las métricas administrativas estarán protegidas mediante Supabase Auth y autorización en la API .NET 10. Todavía no existe autenticación real en este prototipo.</p>
+            <div class="bg-amber-50 text-amber-900 border border-amber-200 rounded-lg p-3 text-xs mt-4">El siguiente botón abre únicamente datos ficticios para evaluar la interfaz. No concede permisos ni consulta información privada.</div>
+            <button onclick="showDashboardDemo()" class="mt-5 w-full rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-4 py-3">Explorar panel de ejemplo</button>
+            <button onclick="closeAdminModal()" class="mt-2 w-full text-sm text-gray-600 py-2">Cancelar</button>
+        </div>
+    </div>
+
+<!-- Inscripción y recordatorios: .ics funciona localmente; envío por email requiere API .NET 10 -->
+<div id="attendance-modal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="attendance-title">
+ <div class="w-full max-w-lg max-h-[93vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+  <div class="flex items-start justify-between gap-3"><div><p class="text-xs uppercase tracking-wide font-bold text-emerald-700">JujuyConecta · Eventos</p><h2 id="attendance-title" class="text-2xl font-bold mt-1">Quiero asistir</h2></div><button type="button" onclick="closeAttendanceModal()" aria-label="Cerrar" class="rounded-lg p-2 hover:bg-gray-100">✕</button></div>
+  <p id="attendance-event-name" class="font-semibold mt-3"></p>
+  <div class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-950 mt-3 space-y-1"><p class="font-semibold" id="attendance-event-date"></p><p id="attendance-event-place"></p></div>
+  <p class="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3"><strong>Agenda de prueba:</strong> las fechas de estos eventos son ficticias, para demostrar el calendario y los recordatorios. No representan eventos confirmados.</p>
+  <div class="mt-4 space-y-2">
+   <p class="font-bold text-gray-900">Opción 1: guardarlo en tu calendario <span class="text-xs font-semibold text-green-700">(funciona ahora)</span></p>
+   <p class="text-xs text-gray-600">La descarga incluye una alarma 24 horas antes. La aparición de la notificación depende de que tu aplicación de calendario importe y respete las alertas del archivo.</p>
+   <div class="flex flex-wrap gap-2">
+    <button type="button" id="attendance-download-ics" onclick="downloadSelectedEventIcs()" class="px-4 py-2.5 rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white text-sm font-semibold">📅 Descargar calendario (.ics)</button>
+    <button type="button" id="attendance-google-calendar" onclick="openSelectedGoogleCalendar()" class="px-4 py-2.5 rounded-lg border border-indigo-300 hover:bg-indigo-50 text-indigo-800 text-sm font-semibold">Abrir en Google Calendar ↗</button>
+   </div>
+  </div>
+  <form id="attendance-form" class="mt-5 pt-4 border-t border-gray-200 space-y-3">
+   <p class="font-bold text-gray-900">Opción 2: recordatorio por correo <span id="email-mode-badge" class="text-xs font-semibold text-amber-700">(integración pendiente)</span></p>
+   <label class="block text-sm font-semibold" for="attendance-contact">Correo electrónico</label>
+   <input id="attendance-contact" class="w-full rounded-lg border border-gray-300 p-3" type="email" autocomplete="email" maxlength="254" placeholder="nombre@correo.com" required />
+   <label class="flex items-start gap-2 text-xs text-gray-700"><input type="checkbox" id="attendance-consent" required class="mt-1"/><span>Autorizo recibir <strong>un correo de recordatorio</strong> 24 horas antes de este evento. Entiendo que puedo cancelar la suscripción.</span></label>
+   <label class="flex items-start gap-2 text-xs text-gray-700"><input type="checkbox" id="attendance-channel-consent" class="mt-1"/><span>Opcional: quiero recibir novedades de futuros eventos. Esta preferencia se registra separadamente del recordatorio.</span></label>
+   <button type="submit" id="attendance-submit" class="w-full rounded-lg bg-emerald-600 py-3 font-bold text-white hover:bg-emerald-700">Probar solicitud de recordatorio</button>
+  </form>
+  <p id="attendance-feedback" role="status" aria-live="polite" class="text-sm mt-3"></p>
+ </div>
+</div>
+<script>
+const events = [
+ {id:1,startAt:'2026-11-07T20:00:00-03:00',durationMinutes:180,title:'La Noche de las Hamburguesas Jujuy',category:'Gastronomía',period:'Noche',place:'Paseo Sarmiento',bus:'Por confirmar',price:'Por confirmar',views:380,description:'Propuesta gastronómica con música en vivo.',insight:'Se estima que el mayor interés podría concentrarse por la noche. Si preferís menos movimiento, considerá llegar temprano.',image:'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=700&q=80'},
+ {id:2,startAt:'2026-11-14T16:00:00-03:00',durationMinutes:240,title:'Gran Feria Emprendedora Parque San Martín',category:'Feria',period:'Tarde',place:'Parque San Martín',bus:'Por confirmar',price:'Por confirmar',views:325,description:'Artesanos y emprendedores locales.',insight:'La tarde podría reunir mayor interés. Para recorrer con más tranquilidad, podría convenirte visitar la feria al comienzo.',image:'https://images.unsplash.com/photo-1509315811355-532c99176e1e?auto=format&fit=crop&w=700&q=80'},
+ {id:3,startAt:'2026-11-21T10:00:00-03:00',durationMinutes:120,title:'Taller de Innovación Digital',category:'Capacitación',period:'Manana',place:'CPV Campo Verde',bus:'Por confirmar',price:'Por confirmar',views:145,description:'Capacitación sobre herramientas digitales.',insight:'Por tratarse de una actividad formativa, te recomendamos confirmar cupos y horario de inicio antes de asistir.',image:'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=700&q=80'},
+ {id:4,startAt:'2026-11-28T21:00:00-03:00',durationMinutes:180,title:'Festival Folklórico en La Viña',category:'Música',period:'Noche',place:'La Viña',bus:'Por confirmar',price:'Por confirmar',views:292,description:'Música y danzas tradicionales.',insight:'Las actividades musicales nocturnas podrían atraer a grupos familiares. Consultá la programación para organizar tu visita.',image:'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=700&q=80'},
+ {id:5,startAt:'2026-12-05T15:00:00-03:00',durationMinutes:180,title:'Exposición de Textiles Autóctonos',category:'Cultura',period:'Tarde',place:'Centro Cultural Manuel Belgrano',bus:'Por confirmar',price:'Por confirmar',views:210,description:'Muestra de artesanías textiles.',insight:'Podría resultar una buena opción para una visita tranquila por la tarde. Confirmá el horario de apertura antes de salir.',image:'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=700&q=80'}
+];
+let currentPeriod='all', currentSlide=0, fontDelta=0, speechEnabled=false, charts=[];
+const $ = id => document.getElementById(id);
+const escapeHtml = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function renderEvents(){
+ const q=$('input-search-event').value.trim().toLocaleLowerCase('es');
+ const selected=events.filter(e=>(currentPeriod==='all'||e.period===currentPeriod)&&[e.title,e.category,e.place,e.description].join(' ').toLocaleLowerCase('es').includes(q));
+ $('events-list').innerHTML=selected.length?selected.map(e=>`<article class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden"><img src="${e.image}" alt="" class="h-36 w-full object-cover"><div class="p-4 space-y-2"><span class="text-xs font-semibold text-orange-700">${escapeHtml(e.category)} · ${e.period==='Manana'?'Mañana':escapeHtml(e.period)}</span><h4 class="font-bold text-gray-900">${escapeHtml(e.title)}</h4><p class="text-xs text-gray-600">📍 ${escapeHtml(e.place)}</p><p class="text-xs text-amber-800">🗓 ${escapeHtml(formatEventDate(e.startAt))} · Fecha ficticia para demostración</p><p class="text-sm text-gray-600">${escapeHtml(e.description)}</p><div class="rounded-lg bg-indigo-50 border border-indigo-100 p-3"><p class="text-xs font-bold text-indigo-800 flex items-center gap-1">✦ Recomendación inteligente</p><p class="text-xs text-indigo-950 mt-1">${escapeHtml(e.insight)}</p><p class="text-[10px] text-indigo-700 mt-2">Texto ilustrativo · Sin modelo ML conectado</p></div><div class="flex flex-wrap items-center gap-3"><button type="button" onclick="openAttendanceModal(${e.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg px-4 py-2">✓ Asistir · Calendario / Email</button><button onclick="selectEvent(${e.id})" class="text-sm font-semibold text-blue-700 hover:underline">Ver ubicación y transporte →</button></div></div></article>`).join(''):'<p class="text-sm text-gray-600 col-span-full">No se encontraron eventos con esos filtros.</p>';
+}
+function selectEvent(id){const e=events.find(x=>x.id===id);if(!e)return;$('map-pin-title').textContent=e.place;$('map-bus').textContent=e.bus;$('map-price').textContent=e.price;}
+function filterEventsByTime(period){currentPeriod=period;['all','Manana','Tarde','Noche'].forEach(x=>{const b=$('filter-btn-'+x.toLowerCase());b.classList.toggle('ring-2',x===period);b.classList.toggle('ring-white',x===period);});renderEvents();}
+function searchEvents(){renderEvents();}
+function showSlide(){document.querySelectorAll('.carousel-item').forEach((el,i)=>el.classList.toggle('active',i===currentSlide));}
+function nextSlide(){currentSlide=(currentSlide+1)%5;showSlide();}
+function prevSlide(){currentSlide=(currentSlide+4)%5;showSlide();}
+function switchView(view){if(view==='dashboard'){openAdminModal();return;}['community','business','dashboard'].forEach(v=>$('view-'+v).classList.toggle('hidden',v!==view));['community','business'].forEach(v=>{const b=$('nav-btn-'+v);b.classList.toggle('bg-white',v===view);b.classList.toggle('shadow',v===view);});window.scrollTo({top:0,behavior:'smooth'});}
+function openAdminModal(){$('admin-modal').classList.remove('hidden');$('admin-modal').classList.add('flex');}
+function closeAdminModal(){$('admin-modal').classList.add('hidden');$('admin-modal').classList.remove('flex');}
+function showDashboardDemo(){closeAdminModal();['community','business'].forEach(v=>$('view-'+v).classList.add('hidden'));$('view-dashboard').classList.remove('hidden');renderDashboard();window.scrollTo({top:0,behavior:'smooth'});}
+function leaveDashboard(){switchView('community');}
+function renderDashboard(){
+ const cards=[['Eventos de muestra',events.length],['Visualizaciones simuladas',events.reduce((a,e)=>a+e.views,0).toLocaleString('es-AR')],['Categorías',new Set(events.map(e=>e.category)).size],['ML conectado','No']];
+ $('metrics-grid').innerHTML=cards.map(([label,value])=>`<div class="bg-white p-5 rounded-xl border border-gray-200"><p class="text-sm text-gray-500">${label}</p><p class="text-3xl font-extrabold mt-2">${value}</p></div>`).join('');
+ $('admin-predictions').innerHTML=events.map(e=>`<div class="border-b border-gray-100 pb-3"><p class="font-semibold text-sm">${escapeHtml(e.title)}</p><p class="text-xs text-gray-600 mt-1">${escapeHtml(e.insight)}</p><p class="text-xs text-amber-700 mt-1">Estado: texto de ejemplo · Sin confianza ni precisión calculadas</p></div>`).join('');
+ charts.forEach(c=>c.destroy());charts=[];
+ if(typeof Chart==='undefined')return;
+ const counts={};events.forEach(e=>counts[e.category]=(counts[e.category]||0)+1);
+ charts.push(new Chart($('category-chart'),{type:'bar',data:{labels:Object.keys(counts),datasets:[{label:'Cantidad de eventos',data:Object.values(counts),backgroundColor:'#6366f1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}}));
+ charts.push(new Chart($('views-chart'),{type:'bar',data:{labels:events.map(e=>e.title.slice(0,22)),datasets:[{label:'Visualizaciones simuladas',data:events.map(e=>e.views),backgroundColor:'#0d9488'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}}));
+}
+function toggleHighContrast(){$('body-app').classList.toggle('high-contrast');}
+function changeFontSize(delta){fontDelta=delta===0?0:Math.max(-2,Math.min(4,fontDelta+delta));document.documentElement.style.fontSize=(16+fontDelta*2)+'px';}
+function toggleTextToSpeech(){speechEnabled=!speechEnabled;$('lbl-tts').textContent='Lectura de Voz ('+(speechEnabled?'ON':'OFF')+')';if(!speechEnabled&&'speechSynthesis'in window)window.speechSynthesis.cancel();else if(speechEnabled&&'speechSynthesis'in window){const msg=new SpeechSynthesisUtterance('Bienvenidos a JujuyConecta. Elegí un evento para consultar su recomendación inteligente.');msg.lang='es-AR';window.speechSynthesis.speak(msg);}}
+function changeLanguage(lang){if(lang!=='es'){alert('Esta traducción aún no está implementada. El contenido continúa en español.');$('lang-selector').value='es';}}
+
+// API optional: set window.JUJUY_API_BASE_URL to the public HTTPS URL of the .NET API
+// before this script is executed (for example, in a deployment-specific config.js).
+// Never put private Gmail credentials or Supabase service keys in frontend code.
+const apiBaseUrl = String(window.JUJUY_API_BASE_URL || '').replace(/\/$/, '');
+let selectedAttendanceEvent = null;
+const dateFormatter = new Intl.DateTimeFormat('es-AR', {timeZone:'America/Argentina/Jujuy', weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+function formatEventDate(iso){ return dateFormatter.format(new Date(iso))+' h (Jujuy)'; }
+function getSelectedEvent(){ return events.find(e=>e.id===selectedAttendanceEvent); }
+function openAttendanceModal(id){
+ const item=events.find(x=>x.id===id);if(!item)return;
+ selectedAttendanceEvent=id;
+ $('attendance-event-name').textContent=item.title;
+ $('attendance-event-date').textContent='🗓 '+formatEventDate(item.startAt);
+ $('attendance-event-place').textContent='📍 '+item.place;
+ $('attendance-form').reset();
+ $('attendance-feedback').textContent='';$('attendance-feedback').className='text-sm mt-3';
+ $('attendance-submit').textContent=apiBaseUrl?'Confirmar recordatorio por email':'Probar solicitud de recordatorio';
+ $('email-mode-badge').textContent=apiBaseUrl?'(API configurada)':'(integración pendiente)';
+ $('attendance-modal').classList.remove('hidden');$('attendance-modal').classList.add('flex');
+ $('attendance-download-ics').focus();
+}
+function closeAttendanceModal(){
+ $('attendance-modal').classList.add('hidden');$('attendance-modal').classList.remove('flex');selectedAttendanceEvent=null;
+}
+function toIcsUtc(date){return date.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');}
+function escapeIcs(value){return String(value).replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');}
+// Fold ICS lines at 75 UTF-8 octets, respecting Unicode code points.
+function foldIcsLine(line){
+ let result='', octets=0;
+ for(const cp of line){
+  const size=new TextEncoder().encode(cp).length;
+  if(octets+size>75){result+='\r\n ';octets=1;}
+  result+=cp;octets+=size;
+ }
+ return result;
+}
+function buildIcs(item){
+ const start=new Date(item.startAt), end=new Date(start.getTime()+item.durationMinutes*60000);
+ const description='Evento FICTICIO de demostración de JujuyConecta. No corresponde a una actividad confirmada.\n'+item.description;
+ const lines=[
+  'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//JujuyConecta//Calendario de demostracion//ES',
+  'CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
+  'UID:demo-evento-'+item.id+'@jujuyconecta.example',
+  'DTSTAMP:'+toIcsUtc(new Date()),
+  'DTSTART:'+toIcsUtc(start),'DTEND:'+toIcsUtc(end),
+  'SUMMARY:'+escapeIcs('[DEMO] '+item.title),
+  'DESCRIPTION:'+escapeIcs(description),
+  'LOCATION:'+escapeIcs(item.place+', San Salvador de Jujuy, Argentina'),
+  'STATUS:TENTATIVE','BEGIN:VALARM','ACTION:DISPLAY',
+  'DESCRIPTION:'+escapeIcs('Falta 24 horas para el evento de demostración: '+item.title),
+  'TRIGGER:-PT24H','END:VALARM','END:VEVENT','END:VCALENDAR'
+ ];
+ return lines.map(foldIcsLine).join('\r\n')+'\r\n';
+}
+function downloadSelectedEventIcs(){
+ const item=getSelectedEvent();if(!item)return;
+ const url=URL.createObjectURL(new Blob([buildIcs(item)],{type:'text/calendar;charset=utf-8'}));
+ const a=document.createElement('a');a.href=url;a.download='jujuyconecta-evento-demo-'+item.id+'.ics';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ const feedback=$('attendance-feedback');feedback.className='text-sm mt-3 text-indigo-800';
+ feedback.textContent='Archivo .ics descargado. Importalo en tu calendario y comprobá que esté habilitada la alerta de 24 horas. La fecha es ficticia.';
+}
+function openSelectedGoogleCalendar(){
+ const item=getSelectedEvent();if(!item)return;
+ const start=new Date(item.startAt),end=new Date(start.getTime()+item.durationMinutes*60000);
+ const params=new URLSearchParams({action:'TEMPLATE',text:'[DEMO] '+item.title,dates:toIcsUtc(start)+'/'+toIcsUtc(end),details:'Evento FICTICIO de demostración. No corresponde a una actividad confirmada. Configurá manualmente el aviso de 24 horas en Google Calendar.',location:item.place+', San Salvador de Jujuy, Argentina'});
+ window.open('https://calendar.google.com/calendar/render?'+params.toString(),'_blank','noopener,noreferrer');
+ const feedback=$('attendance-feedback');feedback.className='text-sm mt-3 text-indigo-800';
+ feedback.textContent='Google Calendar se abrió para agregar el evento. Verificá la fecha ficticia y configurá allí la notificación 24 horas antes: ese enlace no puede establecer alertas automáticamente.';
+}
+$('attendance-form').addEventListener('submit',async event=>{
+ event.preventDefault();if(!$('attendance-form').reportValidity())return;
+ const item=getSelectedEvent();if(!item)return;
+ const feedback=$('attendance-feedback');
+ if(!apiBaseUrl){
+  feedback.className='text-sm mt-3 text-amber-800';
+  feedback.textContent='Formulario validado, pero el recordatorio por email NO se registró ni se enviará: aún falta desplegar/configurar la API .NET 10. Podés descargar el calendario sin costo desde el botón superior.';
+  return;
+ }
+ const button=$('attendance-submit');button.disabled=true;button.textContent='Registrando...';
+ try{
+  const res=await fetch(apiBaseUrl+'/api/attendances',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:item.id,email:$('attendance-contact').value.trim(),reminderConsent:$('attendance-consent').checked,newsConsent:$('attendance-channel-consent').checked})});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(data.detail||data.message||'No se pudo registrar el recordatorio.');
+  feedback.className='text-sm mt-3 text-green-800';
+  feedback.textContent='Solicitud registrada en el servidor. '+(data.message||'Recibirás un email 24 horas antes de este evento.')+' Recordá que esta agenda contiene fechas de demostración.';
+  $('attendance-form').reset();
+ }catch(err){feedback.className='text-sm mt-3 text-red-700';feedback.textContent='No se registró el recordatorio: '+err.message;}
+ finally{button.disabled=false;button.textContent='Confirmar recordatorio por email';}
+});
+$('attendance-modal').addEventListener('click',e=>{if(e.target===$('attendance-modal'))closeAttendanceModal();});
+
+$('event-proposal-form').addEventListener('submit',e=>{e.preventDefault();$('proposal-feedback').textContent='Formulario validado localmente. No se guardaron datos ni se envió la propuesta.';});
+$('admin-modal').addEventListener('click',e=>{if(e.target===$('admin-modal'))closeAdminModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAdminModal();closeAttendanceModal();}});
+renderEvents();if(window.lucide)lucide.createIcons();
+</script>
+</body></html>

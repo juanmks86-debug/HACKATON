@@ -1,0 +1,12 @@
+# Credenciales, conexiones y despliegues
+.env
+.env.*
+!.env.example
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/secrets.json
+**/config.js
+**/bin/
+**/obj/
+node_modules/
+.vscode/.ropeproject

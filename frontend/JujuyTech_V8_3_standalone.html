@@ -1,0 +1,1054 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JujuyTech - Eventos y Mapa 3D · V7.3</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- Chart.js for ML and Analytics charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css'">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js'"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        if (window.tailwind) tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        jujuy: {
+                            red: '#E53E3E',
+                            orange: '#DD6B20',
+                            yellow: '#D69E2E',
+                            lime: '#84CC16',
+                            blue: '#3182CE',
+                            purple: '#6B46C1',
+                            dark: '#1A202C'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .high-contrast {
+            filter: contrast(140%) brightness(95%);
+            background-color: #000000 !important;
+            color: #FFFF00 !important;
+        }
+        .high-contrast header, .high-contrast footer, .high-contrast div, .high-contrast card {
+            background-color: #121212 !important;
+            border-color: #FFFF00 !important;
+            color: #FFFFFF !important;
+        }
+        .high-contrast button {
+            background-color: #FFFF00 !important;
+            color: #000000 !important;
+            font-weight: bold !important;
+        }
+        .carousel-item {
+            display: none;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .carousel-item.active {
+            display: block;
+        }
+
+    /* JujuyTech V7.3 — Mapa 3D actualizado desde index2 (1).html */
+    .jt-map-shell {position:relative;height:740px;min-height:580px;overflow:hidden;border-radius:20px;background:#020617;border:1px solid #334155;box-shadow:0 22px 50px #0f172a38;isolation:isolate;}
+    #event-map {position:absolute;inset:0;width:100%;height:100%;}
+    .jt-map-sidebar {position:absolute;z-index:11;top:16px;left:16px;bottom:16px;width:365px;max-width:calc(100% - 32px);display:flex;flex-direction:column;border-radius:17px;overflow:hidden;background:rgba(15,23,42,.93);border:1px solid #334155;box-shadow:0 16px 40px #0008;backdrop-filter:blur(16px);}
+    .jt-map-sidebar[hidden] {display:none;}
+    .jt-map-filters {display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding:3px 0 5px;}
+    .jt-map-filter {white-space:nowrap;flex-shrink:0;border-radius:8px;background:#1e293b;color:#cbd5e1;font-size:11px;font-weight:700;padding:7px 10px;border:1px solid transparent;}
+    .jt-map-filter:hover,.jt-map-filter:focus-visible{background:#334155;outline-color:#6ee7b7;}
+    .jt-map-filter[aria-pressed="true"] {background:#10b981;color:#042f2e;}
+    .jt-map-card{width:100%;border:1px solid #334155;background:rgba(51,65,85,.45);border-radius:12px;display:flex;gap:10px;padding:9px;text-align:left;color:#fff;transition:background .15s,border-color .15s;}
+    .jt-map-card:hover,.jt-map-card:focus-visible,.jt-map-card[aria-pressed="true"]{background:rgba(15,118,110,.34);border-color:#34d399;outline:none;}
+    .jt-map-image{width:92px;height:82px;object-fit:cover;flex-shrink:0;border-radius:9px;background:#334155;}
+    .jt-map-card-content{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px;}
+    .jt-map-card-content strong{font-size:12px;line-height:1.28;}
+    .jt-map-card-content small{font-size:10px;line-height:1.38;color:#cbd5e1;}
+    .jt-map-category{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;}
+    .jt-map-demo{font-size:9px;color:#fde68a;font-weight:800;border-radius:5px;background:#78350f55;padding:2px 5px;display:inline-flex;width:max-content;}
+    .jt-map-toolbar{position:absolute;z-index:12;right:15px;top:16px;display:flex;flex-direction:column;align-items:flex-end;gap:9px;max-width:50%;}
+    .jt-map-tool{background:rgba(15,23,42,.93);color:#fff;border:1px solid #475569;border-radius:12px;padding:10px 13px;font-size:11px;font-weight:800;box-shadow:0 8px 24px #0008;backdrop-filter:blur(12px);}
+    .jt-map-tool:hover,.jt-map-tool:focus-visible{border-color:#34d399;background:#1e293b;outline-color:#34d399;}
+    .jt-map-pin{--jt-pin:#10b981;width:34px;height:34px;border-radius:50%;border:2px solid var(--jt-pin);background:#0f172a;display:grid;place-items:center;box-shadow:0 0 0 7px color-mix(in srgb,var(--jt-pin) 24%,transparent),0 4px 18px #0009;cursor:pointer;transition:transform .15s;}
+    .jt-map-pin:hover,.jt-map-pin[aria-current="true"]{transform:scale(1.24);}
+    .jt-map-pin-dot{width:11px;height:11px;border-radius:50%;background:var(--jt-pin);}
+    .maplibregl-popup-content{background:transparent!important;box-shadow:none!important;padding:0!important;}
+    .maplibregl-popup-close-button{color:white!important;font-size:19px;right:8px;top:7px;z-index:3;}
+    .jt-map-popup{background:rgba(15,23,42,.97);color:white;border:1px solid #475569;border-radius:14px;padding:14px;width:270px;max-width:80vw;box-shadow:0 15px 32px #0009;font:12px system-ui;}
+    .jt-map-popup img{width:100%;height:125px;object-fit:cover;border-radius:10px;margin-bottom:8px;background:#334155;}
+    .jt-map-popup-title{font-size:14px;font-weight:900;line-height:1.25;margin:6px 0;}
+    .jt-map-popup p{color:#cbd5e1;font-size:11px;margin:5px 0;line-height:1.4;}
+    .jt-map-popup-button{display:block;border:0;background:linear-gradient(90deg,#34d399,#14b8a6);color:#052e25;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:900;width:100%;margin-top:10px;text-align:center;}
+    .jt-map-status{position:absolute;z-index:10;right:13px;bottom:12px;max-width:380px;background:rgba(15,23,42,.86);border:1px solid #475569;border-radius:9px;color:#f8fafc;padding:8px 12px;font-size:11px;pointer-events:none;}
+    @media (max-width:900px){.jt-map-shell{height:755px}.jt-map-sidebar{top:12px;left:12px;bottom:auto;width:360px;max-height:335px;max-width:calc(100% - 24px)}.jt-map-toolbar{top:auto;bottom:15px;right:12px;flex-direction:row;flex-wrap:wrap;max-width:calc(100% - 24px);gap:5px}.jt-map-tool{font-size:10px;padding:9px}.jt-map-status{left:12px;right:auto;bottom:68px;max-width:calc(100% - 24px)} }
+    @media (max-width:520px){.jt-map-shell{height:730px}.jt-map-sidebar{max-height:330px}.jt-map-image{width:72px;height:74px}.jt-map-toolbar{bottom:10px}.jt-map-status{bottom:82px}.jt-map-popup{width:245px}.jt-map-tool{font-size:9px;padding:8px}}
+    
+/* JujuyTech V8 — acceso, roles y rutas */
+body:not(.jt-auth-ready) > header, body:not(.jt-auth-ready) > main,
+body.jt-logged-out > header,body.jt-logged-out > main,
+body:not(.jt-auth-ready) > footer,body.jt-logged-out > footer{display:none!important;}
+#jt-auth-screen{min-height:100vh;display:flex;background:white;font-family:Inter,system-ui,sans-serif;color:#111827;}
+body.jt-logged-in #jt-auth-screen{display:none!important;}
+.jt-auth-art{width:57%;padding:6vw 7vw;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative;color:#fff;background:linear-gradient(150deg,#4649f6,#2428aa 64%,#121463);}
+.jt-auth-art::after{content:'';position:absolute;inset:20% -14% -30% 0;border:1px solid #ffffff21;transform:rotate(-24deg);border-radius:70px;box-shadow:0 0 0 75px #ffffff08,0 0 0 148px #ffffff06,0 0 0 220px #ffffff05;pointer-events:none;}
+.jt-auth-art>*{position:relative;z-index:1}.jt-brand-symbol{font-size:78px;line-height:1.05;font-weight:900;letter-spacing:-.06em;}
+.jt-auth-art h1{font-size:clamp(34px,4vw,62px);line-height:1.1;font-weight:850;letter-spacing:-.04em;margin-bottom:28px;}
+.jt-auth-art p{font-size:clamp(15px,1.4vw,20px);max-width:520px;line-height:1.6;color:#e3e6ff;}
+.jt-auth-panel{width:43%;padding:46px 7vw 45px 5.2vw;display:flex;align-items:center;justify-content:center;overflow:auto;}
+.jt-auth-inner{width:100%;max-width:420px;}
+.jt-auth-wordmark{font-size:26px;font-weight:850;letter-spacing:-.04em;margin-bottom:54px;}
+.jt-auth-inner h2{font-size:clamp(25px,2.4vw,35px);line-height:1.2;font-weight:850;letter-spacing:-.04em;margin-bottom:8px;}
+.jt-auth-muted{font-size:13px;color:#6b7280;line-height:1.5;margin-bottom:22px;}
+.jt-role-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0 24px;}
+.jt-role-option{min-height:91px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px solid #e5e7eb;border-radius:12px;padding:12px 5px;color:#4b5563;background:white;font-size:11px;font-weight:750;cursor:pointer;}
+.jt-role-option[aria-pressed=true]{color:#3730a3;border-color:#5146f6;background:#f1f0ff;}
+.jt-role-option:hover{border-color:#a5b4fc;}.jt-role-option b{font-size:24px;}
+.jt-field{display:block;width:100%;font-size:14px;border:1px solid #d1d5db;border-radius:10px;padding:13px 14px;outline:none;margin:10px 0;background:#fff;color:#111827;}
+.jt-field:focus{border-color:#5146f6;box-shadow:0 0 0 3px #5146f61c;}
+.jt-auth-button{display:block;width:100%;background:#141414;color:white;border-radius:10px;font-size:14px;font-weight:750;padding:13px 10px;margin:15px 0 10px;cursor:pointer;}
+.jt-auth-button:disabled{opacity:.55;cursor:wait;}.jt-google-button{width:100%;border:1px solid #d1d5db;background:#fff;border-radius:10px;padding:11px;font-size:13px;font-weight:750;cursor:pointer;}
+.jt-google-g{font-size:21px;font-weight:850;background:conic-gradient(#4285f4 0 90deg,#34a853 90deg 180deg,#fbbc05 180deg 240deg,#ea4335 240deg 360deg);-webkit-background-clip:text;background-clip:text;color:transparent;vertical-align:middle;margin-right:10px;}
+.jt-auth-links{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:13px 0;}
+.jt-auth-links button{font-size:12px;color:#3730a3;text-decoration:underline;font-weight:650;}
+#jt-auth-feedback{min-height:30px;padding:8px 0;font-size:12px;color:#9a3412;line-height:1.45;}
+#jt-auth-feedback[data-status=ok]{color:#047857;}
+.jt-profilebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;}
+.jt-profilebar button{border:1px solid #d1d5db;border-radius:9px;padding:7px 11px;font-weight:700;}
+@media(max-width:850px){#jt-auth-screen{flex-direction:column}.jt-auth-art,.jt-auth-panel{width:100%;}.jt-auth-art{min-height:210px;padding:26px}.jt-auth-art h1{font-size:35px;margin:12px 0}.jt-auth-art p{font-size:13px}.jt-auth-art .jt-brand-symbol{font-size:36px}.jt-auth-art footer{display:none}.jt-auth-panel{padding:35px 24px}.jt-auth-wordmark{margin-bottom:22px}}
+</style>
+
+<style id="jt-hacki-portal-visibility">
+/* Hacki disponible en portales Comunidad y Red Empresarial, también en modo invitado. */
+#jt-hacki-host { display: none !important; }
+body.jt-chat-enabled #jt-hacki-host { display: block !important; }
+</style>
+</head>
+<body class="jt-logged-out bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col transition-all duration-300" id="body-app">
+
+
+<section id="jt-auth-screen" aria-labelledby="jt-login-heading">
+  <div class="jt-auth-art">
+    <div class="jt-brand-symbol" aria-hidden="true">✳</div>
+    <div><h1>Hola,<br>JujuyTech 👋</h1><p>Difusión, comunidad y compromiso.<br>Conectamos vecinos, emprendedores y municipio con la agenda de Jujuy.</p></div>
+    <footer style="color:#bdc5ff;font-size:13px">JujuyTech · Una plataforma para nuestra comunidad</footer>
+  </div>
+  <div class="jt-auth-panel"><div class="jt-auth-inner">
+    <div class="jt-auth-wordmark">Jujuy<span style="color:#5046f4">Tech</span></div>
+    <h2 id="jt-login-heading">¡Bienvenido de nuevo!</h2>
+    <p id="jt-auth-caption" class="jt-auth-muted">Elegí un portal para entrar sin cuenta o iniciá sesión para acceder con tu perfil.</p>
+    <div role="group" aria-label="Tipo de acceso" class="jt-role-grid">
+      <button class="jt-role-option" type="button" data-jt-role="community" aria-pressed="true"><b>👥</b>Comunidad</button>
+      <button class="jt-role-option" type="button" data-jt-role="business" aria-pressed="false"><b>🏪</b>Red Empresarial</button>
+      <button class="jt-role-option" type="button" data-jt-role="municipality" aria-pressed="false"><b>🏛️</b>Municipio / Admin</button>
+    </div>
+    <p id="jt-role-note" class="jt-auth-muted" style="margin-bottom:10px">Tocá Comunidad o Red Empresarial para entrar directamente. Municipio abre una vista de demostración, sin permisos administrativos.</p><p class="jt-auth-muted" style="margin-top:0">O ingresá con tu cuenta para usar funciones personalizadas:</p>
+    <form id="jt-auth-form">
+      <label for="jt-auth-email" style="font-size:12px;font-weight:750">Correo electrónico</label>
+      <input class="jt-field" id="jt-auth-email" autocomplete="email" type="email" required placeholder="tuemail@ejemplo.com">
+      <label for="jt-auth-password" style="font-size:12px;font-weight:750">Contraseña</label>
+      <input class="jt-field" id="jt-auth-password" autocomplete="current-password" type="password" required minlength="6" placeholder="Tu contraseña">
+      <button id="jt-submit-auth" class="jt-auth-button" type="submit">Iniciar sesión</button>
+    </form>
+    <button id="jt-login-google" class="jt-google-button" type="button"><span class="jt-google-g">G</span> Continuar con Google</button>
+    <div class="jt-auth-links"><button type="button" id="jt-register-toggle">Crear una cuenta</button><button type="button" id="jt-forgot-password">¿Olvidaste tu contraseña?</button></div>
+    <p id="jt-auth-feedback" role="status" aria-live="polite"></p>
+    <p style="font-size:11px;color:#6b7280">Los perfiles municipales deben ser autorizados previamente por un administrador de la plataforma.</p>
+  </div></div>
+</section>
+    <!-- 1. BARRA DE ACCESIBILIDAD UNIVERSAL -->
+    <div class="bg-jujuy-dark text-white px-4 py-2 text-xs md:text-sm flex flex-wrap justify-between items-center shadow-md z-50">
+        <div class="flex items-center space-x-2">
+            <span class="font-bold tracking-wide flex items-center gap-1">
+                <i data-lucide="accessibility" class="w-4 h-4 text-amber-400"></i> Accesibilidad Universal:
+            </span>
+            <button onclick="toggleTextToSpeech()" id="btn-tts" class="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded flex items-center gap-1 transition">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> <span id="lbl-tts">Lectura de Voz (OFF)</span>
+            </button>
+        </div>
+        <div class="flex items-center space-x-3 mt-1 sm:mt-0">
+            <!-- Fuente -->
+            <div class="flex items-center bg-gray-700 rounded px-1">
+                <button onclick="changeFontSize(-1)" class="px-2 py-0.5 hover:bg-gray-600 rounded font-bold" title="Reducir letra">A-</button>
+                <button onclick="changeFontSize(0)" class="px-2 py-0.5 hover:bg-gray-600 rounded font-bold" title="Tamaño normal">A</button>
+                <button onclick="changeFontSize(1)" class="px-2 py-0.5 hover:bg-gray-600 rounded font-bold" title="Aumentar letra">A+</button>
+            </div>
+            <!-- Alto Contraste -->
+            <button onclick="toggleHighContrast()" class="bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold px-2 py-1 rounded flex items-center gap-1">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i> Alto Contraste
+            </button>
+            <!-- Selector Idioma -->
+            <select id="lang-selector" onchange="changeLanguage(this.value)" class="bg-gray-700 text-white rounded px-2 py-1 text-xs border border-gray-600 focus:outline-none">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+                <option value="qu">Runasimi (Quechua)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ENCABEZADO Y NAVEGACIÓN -->
+    <header class="bg-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('community')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-500 via-yellow-500 to-green-500 flex items-center justify-center text-white font-black text-xl shadow">
+                    J
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl leading-none text-gray-900 tracking-tight">Jujuy<span class="text-amber-600">Tech</span></h1>
+                    <p class="text-xs text-gray-500 font-medium">Difusión, comunidad y compromiso</p>
+                </div>
+            </div>
+            <div class="jt-profilebar"><span id="jt-active-portal">Portal</span><span id="jt-active-email" class="text-gray-500"></span><button id="jt-signin-from-guest" class="hidden" type="button">Iniciar sesión</button><button id="jt-logout" type="button">Salir</button></div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ========================================== -->
+        <!-- SECCIÓN 1: COMUNIDAD (VECINOS Y TURISTAS) -->
+        <!-- ========================================== -->
+        <section id="view-community" class="space-y-8">
+            <!-- GANCHO Y FILTRO HORARIO -->
+            <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-2xl p-6 md:p-8 text-white shadow-xl">
+                <div class="max-w-2xl">
+                    <h2 class="text-2xl md:text-4xl font-extrabold mb-2" id="txt-hero-title">Descubrí eventos en Jujuy</h2>
+                    <p class="text-amber-100 text-sm md:text-base mb-6" id="txt-hero-sub">Explorá actividades culturales, ferias y talleres. Los eventos de esta versión son ejemplos, no una agenda actualizada.</p>
+                    
+                    <a href="#mapa-eventos" class="inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-extrabold text-orange-800 shadow hover:bg-orange-50 mb-5">📍 Explorar mapa 3D de eventos →</a>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs uppercase font-bold tracking-wider self-center mr-2">Filtrar por horario:</span>
+                        <button onclick="filterEventsByTime('all')" class="bg-white/20 hover:bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-white/30 active text-white" id="filter-btn-all">Todos</button>
+                        <button onclick="filterEventsByTime('Manana')" class="bg-white/20 hover:bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-white/30 text-white" id="filter-btn-manana">🌅 Mañana</button>
+                        <button onclick="filterEventsByTime('Tarde')" class="bg-white/20 hover:bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-white/30 text-white" id="filter-btn-tarde">☀️ Tarde</button>
+                        <button onclick="filterEventsByTime('Noche')" class="bg-white/20 hover:bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-white/30 text-white" id="filter-btn-noche">🌙 Noche</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3"><div><h3 class="font-bold text-emerald-950">📣 Novedades de eventos en WhatsApp</h3><p class="text-sm text-emerald-900 mt-1">Próximamente podrás seguir el canal de difusión de JujuyTech. La publicación automática en Canales no está disponible en la API oficial de WhatsApp: esta integración requiere definir un procedimiento de publicación compatible.</p></div><span class="shrink-0 rounded-full border border-emerald-400 text-emerald-800 font-semibold text-xs px-3 py-1">Próximamente</span></div>
+
+            <div id="events-data-status" role="status" aria-live="polite" class="rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-900">
+              Vista previa local de cinco actividades de octubre de 2026. Para consultar registros directamente desde Supabase, configurá la API .NET 10.
+            </div>
+
+            <!-- Carrusel dinámico: mismos eventos que en las tarjetas -->
+            <section id="featured-carousel" aria-label="Actividades culturales destacadas" class="space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                    <h3 class="text-xl font-bold text-gray-900 flex gap-2 items-center"><i data-lucide="sparkles" class="w-5 h-5 text-amber-500"></i> 5 actividades destacadas</h3>
+                    <div class="flex gap-2"><button type="button" onclick="prevSlide()" aria-label="Actividad anterior" class="bg-white shadow rounded-full p-2"><i data-lucide="chevron-left"></i></button><button type="button" onclick="nextSlide()" aria-label="Siguiente actividad" class="bg-white shadow rounded-full p-2"><i data-lucide="chevron-right"></i></button></div>
+                </div>
+                <div id="carousel-container" class="relative overflow-hidden rounded-2xl shadow-lg bg-white h-72 md:h-80" aria-live="polite"></div>
+                <p class="text-xs text-gray-500">Imágenes ilustrativas creadas para JujuyTech. Consultá los detalles y condiciones en la publicación original.</p>
+            </section>
+
+            <!-- MAPA NUEVO: integrado a JujuyTech desde index2 (1).html -->
+            <section id="mapa-eventos" class="space-y-4 scroll-mt-24" aria-labelledby="map-section-title">
+              <div class="flex flex-wrap justify-between items-end gap-3">
+                <div>
+                  <span class="inline-flex px-3 py-1 mb-2 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">📍 Mapa interactivo de Jujuy</span>
+                  <h3 id="map-section-title" class="text-2xl font-extrabold text-gray-900">Explorá eventos en el mapa 3D</h3>
+                  <p class="mt-1 text-sm text-gray-600">Elegí un evento desde el panel o tocá un marcador para conocer su ubicación. Los ejemplos sin fechas confirmadas están identificados.</p>
+                </div>
+                <a class="text-sm font-semibold text-emerald-800 underline underline-offset-2" href="https://www.openstreetmap.org/#map=14/-24.1858/-65.2995" target="_blank" rel="noopener noreferrer">Abrir OpenStreetMap ↗</a>
+              </div>
+              <div class="jt-map-shell" id="map-shell">
+                <div id="event-map" role="region" aria-label="Mapa interactivo 3D de Jujuy"></div>
+                <aside class="jt-map-sidebar" id="jt-map-sidebar" aria-label="Eventos del mapa">
+                  <div class="p-4 border-b border-slate-700/80">
+                    <div class="flex gap-2 justify-between items-center">
+                      <h4 class="font-extrabold text-sm text-white">🟢 San Salvador de Jujuy</h4>
+                      <span class="rounded-full text-[10px] uppercase text-emerald-400 border border-emerald-400/30 px-2 py-1 font-bold">3D interactivo</span>
+                    </div>
+                    <p class="text-slate-400 text-xs mt-1 mb-3">Eventos culturales, ferias y espacios de formación.</p>
+                    <div class="jt-map-filters" id="jt-map-filters" role="group" aria-label="Filtrar eventos del mapa">
+                      <button type="button" class="jt-map-filter" data-filter="Todas" aria-pressed="true">Todas</button>
+                      <button type="button" class="jt-map-filter" data-filter="Feria" aria-pressed="false">Ferias</button>
+                      <button type="button" class="jt-map-filter" data-filter="Cultura" aria-pressed="false">Cultura</button>
+                      <button type="button" class="jt-map-filter" data-filter="Networking" aria-pressed="false">Tech</button>
+                      <button type="button" class="jt-map-filter" data-filter="Capacitación" aria-pressed="false">Formación</button>
+                    </div>
+                  </div>
+                  <div id="map-events-list" class="p-3 overflow-y-auto space-y-2 flex-1" aria-label="Eventos en el mapa"></div>
+                  <div class="p-3 border-t border-slate-700 text-slate-300 text-[11px] flex flex-wrap justify-between gap-2">
+                    <span>Seleccioná para volar al lugar</span>
+                    <button id="map-sidebar-reset" type="button" class="text-emerald-400 hover:underline font-semibold">Centrar Jujuy</button>
+                  </div>
+                </aside>
+                <div class="jt-map-toolbar" aria-label="Controles del mapa">
+                  <button id="map-orbit-toggle" type="button" aria-pressed="false" class="jt-map-tool">↻ Giro 3D Auto</button>
+                  <button id="map-pitch-toggle" type="button" class="jt-map-tool">🧭 Inclinación 3D (On)</button>
+                  <button id="map-theme-toggle" type="button" class="jt-map-tool">☀️ Modo Día / Calles</button>
+                </div>
+                <p id="map-status" class="jt-map-status" aria-live="polite">Cargando mapa de San Salvador de Jujuy…</p>
+                <div id="map-fallback" class="hidden absolute inset-0 z-[9] bg-slate-950 text-white text-center flex flex-col items-center justify-center gap-3 p-6">
+                  <strong class="text-lg">No se pudo cargar el mapa</strong>
+                  <p id="map-fallback-info" class="text-sm text-slate-300">Necesitás conexión a Internet para ver los mapas.</p>
+                  <a href="https://www.openstreetmap.org/#map=14/-24.1858/-65.2995" target="_blank" rel="noopener noreferrer" class="underline text-emerald-300 text-sm">Buscar Jujuy en OpenStreetMap ↗</a>
+                </div>
+              </div>
+              <p class="text-xs text-gray-500">MapLibre GL JS + OpenFreeMap. Coordenadas geográficas del HTML que compartiste; verificá el punto exacto antes de asistir. Los seis eventos sin fecha se muestran solo como ejemplos y no permiten solicitar recordatorios.</p>
+            </section>
+
+            <!-- LISTA DE EVENTOS -->
+            <section aria-labelledby="agenda-title" class="space-y-4">
+                <h3 id="agenda-title" class="text-xl font-extrabold text-gray-900">Agenda de actividades</h3>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-2">
+                    <i data-lucide="search" class="w-5 h-5 text-gray-400 self-center"></i>
+                    <input type="text" id="input-search-event" onkeyup="searchEvents()" placeholder="Buscar por evento, barrio, taller o rubro..." class="w-full focus:outline-none text-sm" aria-label="Buscar eventos" />
+                </div>
+                <p class="text-xs text-gray-500">Las sugerencias mostradas son consejos prácticos basados en la programación publicada, no predicciones de Machine Learning.</p>
+                <div id="events-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+            </section>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECCIÓN 2: RED EMPRESARIAL (EMPRENDEDORES) -->
+        <!-- ========================================== -->
+        <section id="view-business" class="hidden space-y-8">
+            <div class="bg-slate-900 text-white p-6 md:p-8 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <span class="bg-emerald-500/20 text-emerald-400 font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider">Red B2B Empresarial</span>
+                    <h2 class="text-2xl md:text-3xl font-extrabold mt-2">¿Te interesa impulsar tu negocio?</h2>
+                    <p class="text-slate-300 text-sm mt-1">Creá tu evento comercial o unite a ferias locales con otros emprendedores de Jujuy.</p>
+                </div>
+                <button onclick="document.getElementById('b2b-form').scrollIntoView({behavior:'smooth'})" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-6 py-3 rounded-xl shadow transition whitespace-nowrap">
+                    + Crear Evento Comercial
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="store" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-gray-900">Ferias Gastronómicas</h3>
+                    <p class="text-xs text-gray-500 mt-1">Conectá con proveedores local y participá en food-trucks.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i data-lucide="wrench" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-gray-900">Talleres y Oficios</h3>
+                    <p class="text-xs text-gray-500 mt-1">Sumate a capacitaciones de la Municipalidad para PyMEs.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="palette" class="w-6 h-6"></i></div>
+                    <h3 class="font-bold text-lg">Artesanías y cultura</h3><p class="text-xs text-gray-500 mt-1">Vinculá tu emprendimiento con ferias y actividades locales.</p>
+                </div>
+            </div>
+            <div id="b2b-form" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+                <h3 class="text-xl font-bold">Proponer un evento comercial</h3>
+                <p class="text-sm text-gray-500">Formulario demostrativo. La creación real requerirá iniciar sesión como organizador y conectar Supabase.</p>
+                <form id="event-proposal-form" class="grid md:grid-cols-2 gap-4">
+                    <label class="text-sm font-semibold">Nombre del evento<input required name="nombre" maxlength="100" class="mt-1 w-full rounded-lg border border-gray-300 p-3" placeholder="Ej.: Feria de emprendedores"></label>
+                    <label class="text-sm font-semibold">Barrio / ubicación<input required name="ubicacion" maxlength="120" class="mt-1 w-full rounded-lg border border-gray-300 p-3" placeholder="Ej.: Centro"></label>
+                    <label class="text-sm font-semibold">Fecha<input required type="date" name="fecha" class="mt-1 w-full rounded-lg border border-gray-300 p-3"></label>
+                    <label class="text-sm font-semibold">Categoría<select name="categoria" class="mt-1 w-full rounded-lg border border-gray-300 p-3"><option>Gastronomía</option><option>Feria</option><option>Capacitación</option><option>Cultura</option></select></label>
+                    <button type="submit" class="md:col-span-2 bg-emerald-600 text-white font-bold rounded-lg px-4 py-3">Validar propuesta (demo)</button>
+                </form>
+                <p id="proposal-feedback" aria-live="polite" class="text-sm"></p>
+            </div>
+        </section>
+        <!-- Panel de demostración. No es una ruta privada ni reemplaza autorización en servidor. -->
+        <section id="view-dashboard" class="hidden space-y-6">
+            <div class="flex flex-wrap justify-between items-start gap-4">
+                <div><span class="text-xs font-bold uppercase tracking-wider text-indigo-700">Vista demostrativa · Municipio</span><h2 class="text-3xl font-extrabold mt-1">Panel municipal</h2><p class="text-sm text-gray-600 mt-2">Indicadores ilustrativos. No provienen de GA4 ni de Supabase.</p></div>
+                <button onclick="leaveDashboard()" class="border border-gray-300 rounded-lg px-4 py-2 font-semibold bg-white hover:bg-gray-50">Salir de la vista demo</button>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" id="metrics-grid"></div>
+            <div class="grid lg:grid-cols-2 gap-5">
+                <div class="bg-white border border-gray-200 rounded-xl p-5"><h3 class="font-bold mb-4">Interés por categoría (datos de muestra)</h3><div class="relative h-72"><canvas id="category-chart"></canvas></div></div>
+                <div class="bg-white border border-gray-200 rounded-xl p-5"><h3 class="font-bold mb-4">Vistas por evento (datos de muestra)</h3><div class="relative h-72"><canvas id="views-chart"></canvas></div></div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl p-5"><h3 class="font-bold mb-3">Lectura administrativa de predicciones</h3><p class="text-sm text-gray-600 mb-3">En producción se mostrarán valores estimados, fecha de generación, nivel de confianza y comparación con resultados reales. Los textos públicos son una representación resumida y no sustituyen esas métricas.</p><div id="admin-predictions" class="space-y-3"></div></div>
+        </section>
+    </main>
+    <footer class="bg-jujuy-dark text-white px-4 py-6 text-center text-sm mt-8"><strong>JujuyTech</strong> · Difusión, comunidad y compromiso · Prototipo demostrativo para Hackathon INNOA <p class="text-gray-300 text-xs mt-2">Proyecto conceptual no afiliado oficialmente a la Municipalidad. Los eventos, transportes, costos e indicadores incluidos son datos de ejemplo.</p></footer>
+    <div id="admin-modal" class="hidden fixed inset-0 z-[100] bg-black/60 p-4 items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button onclick="closeAdminModal()" class="absolute top-3 right-4 text-gray-500 p-2" aria-label="Cerrar"><i data-lucide="x"></i></button>
+            <div class="w-12 h-12 bg-indigo-100 text-indigo-700 rounded-xl flex items-center justify-center"><i data-lucide="shield-check"></i></div>
+            <h2 id="admin-modal-title" class="font-extrabold text-xl mt-4">Acceso Municipio</h2>
+            <p class="text-sm text-gray-600 mt-2">Las métricas administrativas estarán protegidas mediante Supabase Auth y autorización en la API .NET 10. Todavía no existe autenticación real en este prototipo.</p>
+            <div class="bg-amber-50 text-amber-900 border border-amber-200 rounded-lg p-3 text-xs mt-4">El siguiente botón abre únicamente datos ficticios para evaluar la interfaz. No concede permisos ni consulta información privada.</div>
+            <button onclick="showDashboardDemo()" class="mt-5 w-full rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-4 py-3">Explorar panel de ejemplo</button>
+            <button onclick="closeAdminModal()" class="mt-2 w-full text-sm text-gray-600 py-2">Cancelar</button>
+        </div>
+    </div>
+
+<!-- Inscripción y recordatorios: .ics funciona localmente; envío por email requiere API .NET 10 -->
+<div id="attendance-modal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="attendance-title">
+ <div class="w-full max-w-lg max-h-[93vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+  <div class="flex items-start justify-between gap-3"><div><p class="text-xs uppercase tracking-wide font-bold text-emerald-700">JujuyTech · Eventos</p><h2 id="attendance-title" class="text-2xl font-bold mt-1">Quiero asistir</h2></div><button type="button" onclick="closeAttendanceModal()" aria-label="Cerrar" class="rounded-lg p-2 hover:bg-gray-100">✕</button></div>
+  <p id="attendance-event-name" class="font-semibold mt-3"></p>
+  <div class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-950 mt-3 space-y-1"><p class="font-semibold" id="attendance-event-date"></p><p id="attendance-event-place"></p></div>
+  <p id="attendance-demo-notice" class="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3"><strong>Agenda de prueba:</strong> los eventos de ejemplo no tienen fechas confirmadas; solo las actividades con fecha ofrecen calendario y solicitud de email.</p>
+  <div class="mt-4 space-y-2">
+   <p class="font-bold text-gray-900">Opción 1: recibir un aviso desde tu calendario <span class="text-xs font-semibold text-green-700">(funciona ahora)</span></p>
+   <p class="text-xs text-gray-600">La descarga incluye una alarma 24 horas antes. La aparición de la notificación depende de que tu aplicación de calendario importe y respete las alertas del archivo.</p>
+   <div class="flex flex-wrap gap-2">
+    <button type="button" id="attendance-download-ics" onclick="downloadSelectedEventIcs()" class="px-4 py-2.5 rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white text-sm font-semibold">📅 Descargar calendario (.ics)</button>
+    <button type="button" id="attendance-google-calendar" onclick="openSelectedGoogleCalendar()" class="px-4 py-2.5 rounded-lg border border-indigo-300 hover:bg-indigo-50 text-indigo-800 text-sm font-semibold">Abrir en Google Calendar ↗</button>
+   </div>
+  </div>
+  <p id="attendance-reminder-unavailable" role="status" class="hidden rounded-lg bg-amber-50 text-amber-950 border border-amber-200 p-3 mt-4 text-sm">Ya no faltan 24 horas para la actividad: no se puede programar un correo anticipado. Podés guardar los datos en tu calendario.</p>
+  <form id="attendance-form" class="mt-5 pt-4 border-t border-gray-200 space-y-3">
+   <p class="font-bold text-gray-900">Opción 2: recibir un email 24 horas antes <span id="email-mode-badge" class="text-xs font-semibold text-amber-700">(integración pendiente)</span></p>
+   <label class="block text-sm font-semibold" for="attendance-contact">Correo electrónico</label>
+   <input id="attendance-contact" class="w-full rounded-lg border border-gray-300 p-3" type="email" autocomplete="email" maxlength="254" placeholder="nombre@correo.com" required />
+   <label class="flex items-start gap-2 text-xs text-gray-700"><input type="checkbox" id="attendance-consent" required class="mt-1"/><span>Autorizo recibir <strong>un correo de recordatorio</strong> 24 horas antes de este evento. Entiendo que puedo cancelar la suscripción.</span></label>
+   <label class="flex items-start gap-2 text-xs text-gray-700"><input type="checkbox" id="attendance-channel-consent" class="mt-1"/><span>Opcional: quiero recibir novedades de futuros eventos. Esta preferencia se registra separadamente del recordatorio.</span></label>
+   <button type="submit" id="attendance-submit" class="w-full rounded-lg bg-emerald-600 py-3 font-bold text-white hover:bg-emerald-700">Solicitar recordatorio por email</button>
+  </form>
+  <p id="attendance-feedback" role="status" aria-live="polite" class="text-sm mt-3"></p>
+ </div>
+</div>
+<script>
+let events = [{"id":1,"title":"Del artista al público","startAt":"2026-10-22T18:00:00-03:00","description":"Taller gratuito de curaduría dictado por el magíster Marcelo Coca.","category":"Arte y formación","admissionInfo":"Gratuito","place":"Culturarte, San Martín esquina Sarmiento, San Salvador de Jujuy","image":"assets/curaduria-marcelo-coca.webp","insight":"Actividad gratuita. Consultá disponibilidad con el espacio cultural antes de concurrir.","organizer":"Culturarte","durationMinutes":null,"isDemo":false,"isOfflinePreview":true,"sourceUrl":"https://las24horasdejujuy.com.ar/arte-y-cultura-en-jujuy-conoce-las-actividades-y-exposiciones-del-22-al-28-de-octubre/","bus":"Sin información oficial","price":"Gratuito","views":0},{"id":2,"title":"Composición a través de la metáfora","startAt":"2026-10-23T18:30:00-03:00","description":"Experiencia centrada en el proceso creativo personal coordinada por Sofía Salvatierra.","category":"Arte y creatividad","admissionInfo":"Donación: alimento no perecedero o artículos de limpieza para el Hogar San Antonio","place":"Culturarte, San Martín esquina Sarmiento, San Salvador de Jujuy","image":"assets/creatividad-sofia-salvatierra.webp","insight":"Llevá un alimento no perecedero o elementos de limpieza destinados al Hogar San Antonio.","organizer":"Culturarte","durationMinutes":null,"isDemo":false,"isOfflinePreview":true,"sourceUrl":"https://las24horasdejujuy.com.ar/arte-y-cultura-en-jujuy-conoce-las-actividades-y-exposiciones-del-22-al-28-de-octubre/","bus":"Sin información oficial","price":"Donación: alimento no perecedero o artículos de limpieza para el Hogar San Antonio","views":0},{"id":3,"title":"Grafismo, carne y huesos","startAt":"2026-10-24T19:00:00-03:00","description":"Práctica de observación con modelo vivo y cráneos de animales. Coordinan Analía García y Andrea Atencio.","category":"Dibujo y artes visuales","admissionInfo":"Arancelado · cupos limitados","place":"Culturarte, San Martín esquina Sarmiento, San Salvador de Jujuy","image":"assets/grafismo-carne-huesos.webp","insight":"La actividad es arancelada y los cupos son limitados. Confirmá inscripción y precio antes de asistir.","organizer":"Culturarte","durationMinutes":null,"isDemo":false,"isOfflinePreview":true,"sourceUrl":"https://las24horasdejujuy.com.ar/arte-y-cultura-en-jujuy-conoce-las-actividades-y-exposiciones-del-22-al-28-de-octubre/","bus":"Sin información oficial","price":"Arancelado · cupos limitados","views":0},{"id":4,"title":"Taller de coplas — Elsa Tapia","startAt":"2026-10-27T17:00:00-03:00","description":"Taller de coplas coordinado por Elsa Tapia, centrado en una expresión cultural y literaria regional.","category":"Literatura y tradición","admissionInfo":"Arancelado · consultar importe","place":"Casa de las Letras, Belgrano 1327, San Salvador de Jujuy","image":"assets/taller-coplas-elsa-tapia.webp","insight":"Consultá el importe y las condiciones de inscripción con Casa de las Letras.","organizer":"Casa de las Letras","durationMinutes":null,"isDemo":false,"isOfflinePreview":true,"sourceUrl":"https://las24horasdejujuy.com.ar/arte-y-cultura-en-jujuy-conoce-las-actividades-y-exposiciones-del-22-al-28-de-octubre/","bus":"Sin información oficial","price":"Arancelado · consultar importe","views":0},{"id":5,"title":"Encuentro de Jujeños Autores","startAt":"2026-10-28T18:00:00-03:00","description":"Reunión gratuita del grupo JA (Jujeños Autores), dedicada al intercambio literario.","category":"Literatura y encuentros","admissionInfo":"Gratuito","place":"Casa de las Letras, Belgrano 1327, San Salvador de Jujuy","image":"assets/encuentro-jujenos-autores.webp","insight":"Encuentro gratuito para personas interesadas en la escritura y la literatura jujeña.","organizer":"Casa de las Letras","durationMinutes":null,"isDemo":false,"isOfflinePreview":true,"sourceUrl":"https://las24horasdejujuy.com.ar/arte-y-cultura-en-jujuy-conoce-las-actividades-y-exposiciones-del-22-al-28-de-octubre/","bus":"Sin información oficial","price":"Gratuito","views":0}];
+let currentPeriod='all', currentSlide=0, fontDelta=0, speechEnabled=false, charts=[];
+const $ = id => document.getElementById(id);
+const escapeHtml = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const localPreviewEvents = events.map(e=>({...e}));
+const dateBadgeFormatter=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Jujuy',weekday:'short',day:'2-digit',month:'short'});
+const timeOnlyFormatter=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Jujuy',hour:'2-digit',minute:'2-digit',hour12:false});
+function eventState(e){const t=new Date(e.startAt).getTime();return t<Date.now()?'Finalizado':t<=Date.now()+86400000?'Hoy / próximo':'Próximo';}
+function decorateEvent(e){
+  const startsAt=e.startsAtUtc||e.startAt;
+  return {...e,period:eventPeriod(startsAt),bus:e.bus||'Sin información oficial',price:e.admissionInfo||'No informado',views:0,insight:e.visitorTip||e.insight||'',description:e.description||'',image:(e.imageUrl||e.image||'').replace(/^\/assets\//,'assets/'),place:e.location||e.place||'',startAt:e.startsAtUtc||e.startAt,latitude:e.latitude??e.Latitude??null,longitude:e.longitude??e.Longitude??null,geoSource:e.geoSource??e.GeoSource??null};
+}
+function renderEvents(){
+ const q=$('input-search-event').value.trim().toLocaleLowerCase('es');
+ const selected=events.filter(e=>(currentPeriod==='all'||e.period===currentPeriod)&&[e.title,e.category,e.place,e.description,e.organizer,e.admissionInfo].join(' ').toLocaleLowerCase('es').includes(q));
+ $('events-list').innerHTML=selected.length?selected.map(e=>{
+  const state=eventState(e),isPast=state==='Finalizado';
+  const image=e.image?`<img loading="lazy" src="${escapeHtml(e.image)}" alt="Ilustración temática de ${escapeHtml(e.title)}" class="h-48 w-full object-cover">`:'<div class="h-48 bg-gradient-to-br from-orange-300 to-violet-700 flex justify-center items-center text-white font-semibold">JujuyTech</div>';
+  const admission=e.admissionInfo||'Condiciones por confirmar';
+  const tip=e.insight?`<div class="rounded-lg bg-indigo-50 border border-indigo-100 p-3 space-y-1"><p class="text-xs font-bold text-indigo-800">✦ Dato útil antes de asistir</p><p class="text-xs text-indigo-950">${escapeHtml(e.insight)}</p></div>`:'';
+  const source=e.sourceUrl?`<a href="${escapeHtml(e.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="text-xs text-indigo-700 underline underline-offset-2">Ver publicación de origen ↗</a>`:'';
+  return `<article class="bg-white border border-gray-200 shadow-sm rounded-2xl overflow-hidden flex flex-col">${image}
+    <div class="p-4 space-y-3 flex-1 flex flex-col">
+      <div class="flex flex-wrap gap-2 items-center"><span class="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-900">${escapeHtml(e.category||'Cultura')}</span><span class="rounded-full ${isPast?'bg-slate-100 text-slate-700':'bg-emerald-100 text-emerald-800'} px-2.5 py-1 text-xs font-semibold">${state}</span></div>
+      <div class="rounded-lg border border-slate-200 p-3 bg-slate-50 flex justify-between gap-2 items-center"><span class="text-sm font-bold text-slate-900">📆 ${escapeHtml(dateBadgeFormatter.format(new Date(e.startAt)))}</span><span class="text-sm font-bold text-blue-900">🕒 ${escapeHtml(timeOnlyFormatter.format(new Date(e.startAt)))} hs</span></div>
+      <h4 class="text-lg font-extrabold text-gray-950 leading-tight">${escapeHtml(e.title)}</h4>
+      <p class="text-sm text-gray-600">📍 ${escapeHtml(e.place)}</p>
+      <p class="text-sm text-gray-700">${escapeHtml(e.description)}</p>
+      <p class="rounded-lg bg-amber-50 border border-amber-200 p-2.5 text-xs text-amber-950"><strong>Entrada / requisito:</strong> ${escapeHtml(admission)}</p>
+      ${tip}
+      <div class="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">${source}<div class="flex flex-wrap gap-2"><button type="button" onclick="openAttendanceModal(${Number(e.id)})" class="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold rounded-lg px-4 py-2">${isPast?'Consultar actividad':'✓ Asistir / Calendario'}</button><button type="button" onclick="selectEvent(${Number(e.id)})" class="text-sm font-semibold text-blue-700 hover:underline">Ubicación →</button></div></div>
+    </div></article>`;
+ }).join(''):'<p class="text-sm text-gray-600 col-span-full">No hay eventos publicados que coincidan con los filtros.</p>';
+ if(window.lucide)lucide.createIcons();
+}
+function renderFeatured(){
+ const target=$('carousel-container'); if(!target)return;
+ const top=events.slice(0,5);
+ if(!top.length){$('featured-carousel').classList.add('hidden');target.innerHTML='';return;}
+ $('featured-carousel').classList.remove('hidden');
+ currentSlide=Math.min(currentSlide,top.length-1);
+ target.innerHTML=top.map((e,i)=>`<article class="carousel-item ${i===currentSlide?'active':''} absolute inset-0" aria-hidden="${i!==currentSlide}">
+   ${e.image?`<img src="${escapeHtml(e.image)}" alt="" class="w-full h-full object-cover">`:'<div class="w-full h-full bg-gradient-to-br from-amber-600 to-blue-800"></div>'}
+   <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent p-6 md:p-8 flex flex-col justify-end text-white">
+    <span class="rounded-full bg-white/20 backdrop-blur-sm py-1 px-3 font-semibold text-xs w-fit mb-2">${escapeHtml(dateBadgeFormatter.format(new Date(e.startAt)))} · ${escapeHtml(timeOnlyFormatter.format(new Date(e.startAt)))} hs</span>
+    <h4 class="text-2xl md:text-3xl font-black">${escapeHtml(e.title)}</h4>
+    <p class="text-sm text-white/90 mt-2">${escapeHtml(e.place)}</p>
+   </div></article>`).join('');
+}
+function eventPeriod(iso){
+ const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'America/Argentina/Jujuy',hour:'2-digit',hourCycle:'h23'}).format(new Date(iso)));
+ return hour<12?'Manana':hour<20?'Tarde':'Noche';
+}
+async function loadPublishedEvents(){
+ const status=$('events-data-status');
+ if(!apiBaseUrl){
+  events=localPreviewEvents.map(decorateEvent);
+  status.className='rounded-xl bg-amber-50 border border-amber-200 p-3 text-sm text-amber-950';
+  status.textContent='Vista previa local de la programación publicada para el 22–28 de octubre. Los datos están cargados también en Supabase, pero esta página aún no consulta la API.';
+  renderEvents();renderFeatured();window.jujuyMapRefresh?.(events);return;
+ }
+ status.className='rounded-xl bg-blue-50 border border-blue-200 p-3 text-sm text-blue-900';
+ status.textContent='Consultando la agenda desde Supabase a través de la API .NET 10...';
+ try{
+  const response=await fetch(apiBaseUrl+'/api/events',{headers:{Accept:'application/json'}});
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  const rows=await response.json();
+  if(!Array.isArray(rows))throw new Error('Respuesta no válida');
+  events=rows.map(e=>decorateEvent({...e,isDemo:false,admissionInfo:e.admissionInfo,sourceUrl:e.sourceUrl,organizer:e.organizer,visitorTip:e.visitorTip,durationMinutes:e.durationMinutes==null?null:Number(e.durationMinutes)}));
+  status.className='rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-900';
+  status.textContent=events.length?`${events.length} actividad(es) publicada(s) desde Supabase.`:'Todavía no hay actividades futuras publicadas en Supabase.';
+ }catch(error){
+  events=[]; status.className='rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-900';
+  status.textContent='No fue posible consultar la API. Se ocultan los registros locales para no confundir una falla de conexión con información en tiempo real.';
+ }
+ renderEvents();renderFeatured();window.jujuyMapRefresh?.(events);
+}
+function selectEvent(id){const e=events.find(x=>x.id===id);if(!e)return;window.jujuyMapSelect?.(e);document.getElementById('mapa-eventos')?.scrollIntoView({behavior:'smooth',block:'start'});}
+function filterEventsByTime(period){currentPeriod=period;['all','Manana','Tarde','Noche'].forEach(x=>{const b=$('filter-btn-'+x.toLowerCase());b.classList.toggle('ring-2',x===period);b.classList.toggle('ring-white',x===period);});renderEvents();}
+function searchEvents(){renderEvents();}
+function showSlide(){document.querySelectorAll('.carousel-item').forEach((el,i)=>{el.classList.toggle('active',i===currentSlide);el.setAttribute('aria-hidden',String(i!==currentSlide));});}
+function nextSlide(){const n=Math.min(5,events.length);if(!n)return;currentSlide=(currentSlide+1)%n;showSlide();}
+function prevSlide(){const n=Math.min(5,events.length);if(!n)return;currentSlide=(currentSlide+n-1)%n;showSlide();}
+function switchView(view){if(view==='dashboard'){openAdminModal();return;}['community','business','dashboard'].forEach(v=>$('view-'+v).classList.toggle('hidden',v!==view));['community','business'].forEach(v=>{const b=$('nav-btn-'+v);b.classList.toggle('bg-white',v===view);b.classList.toggle('shadow',v===view);});window.scrollTo({top:0,behavior:'smooth'});}
+function openAdminModal(){$('admin-modal').classList.remove('hidden');$('admin-modal').classList.add('flex');}
+function closeAdminModal(){$('admin-modal').classList.add('hidden');$('admin-modal').classList.remove('flex');}
+function showDashboardDemo(){closeAdminModal();['community','business'].forEach(v=>$('view-'+v).classList.add('hidden'));$('view-dashboard').classList.remove('hidden');renderDashboard();window.scrollTo({top:0,behavior:'smooth'});}
+function leaveDashboard(){switchView('community');}
+function renderDashboard(){
+ const cards=[['Eventos de muestra',events.length],['Visualizaciones simuladas',events.reduce((a,e)=>a+e.views,0).toLocaleString('es-AR')],['Categorías',new Set(events.map(e=>e.category)).size],['ML conectado','No']];
+ $('metrics-grid').innerHTML=cards.map(([label,value])=>`<div class="bg-white p-5 rounded-xl border border-gray-200"><p class="text-sm text-gray-500">${label}</p><p class="text-3xl font-extrabold mt-2">${value}</p></div>`).join('');
+ $('admin-predictions').innerHTML=events.map(e=>`<div class="border-b border-gray-100 pb-3"><p class="font-semibold text-sm">${escapeHtml(e.title)}</p><p class="text-xs text-gray-600 mt-1">${escapeHtml(e.insight)}</p><p class="text-xs text-amber-700 mt-1">Estado: texto de ejemplo · Sin confianza ni precisión calculadas</p></div>`).join('');
+ charts.forEach(c=>c.destroy());charts=[];
+ if(typeof Chart==='undefined')return;
+ const counts={};events.forEach(e=>counts[e.category]=(counts[e.category]||0)+1);
+ charts.push(new Chart($('category-chart'),{type:'bar',data:{labels:Object.keys(counts),datasets:[{label:'Cantidad de eventos',data:Object.values(counts),backgroundColor:'#6366f1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}}));
+ charts.push(new Chart($('views-chart'),{type:'bar',data:{labels:events.map(e=>e.title.slice(0,22)),datasets:[{label:'Visualizaciones simuladas',data:events.map(e=>e.views),backgroundColor:'#0d9488'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}}));
+}
+function toggleHighContrast(){$('body-app').classList.toggle('high-contrast');}
+function changeFontSize(delta){fontDelta=delta===0?0:Math.max(-2,Math.min(4,fontDelta+delta));document.documentElement.style.fontSize=(16+fontDelta*2)+'px';}
+function toggleTextToSpeech(){speechEnabled=!speechEnabled;$('lbl-tts').textContent='Lectura de Voz ('+(speechEnabled?'ON':'OFF')+')';if(!speechEnabled&&'speechSynthesis'in window)window.speechSynthesis.cancel();else if(speechEnabled&&'speechSynthesis'in window){const msg=new SpeechSynthesisUtterance('Bienvenidos a JujuyTech. Elegí un evento para consultar su recomendación inteligente.');msg.lang='es-AR';window.speechSynthesis.speak(msg);}}
+function changeLanguage(lang){if(lang!=='es'){alert('Esta traducción aún no está implementada. El contenido continúa en español.');$('lang-selector').value='es';}}
+
+// API optional: set window.JUJUY_API_BASE_URL to the public HTTPS URL of the .NET API
+// before this script is executed (for example, in a deployment-specific config.js).
+// Never put private Gmail credentials or Supabase service keys in frontend code.
+const apiBaseUrl = String(window.JUJUY_API_BASE_URL || '').replace(/\/$/, '');
+let selectedAttendanceEvent = null;
+const dateFormatter = new Intl.DateTimeFormat('es-AR', {timeZone:'America/Argentina/Jujuy', weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+function formatEventDate(iso){ return dateFormatter.format(new Date(iso))+' h (Jujuy)'; }
+function getSelectedEvent(){ return events.find(e=>e.id===selectedAttendanceEvent); }
+function openAttendanceModal(id){
+ const item=events.find(x=>x.id===id);if(!item)return;
+ selectedAttendanceEvent=id;
+ $('attendance-event-name').textContent=item.title;
+ $('attendance-event-date').textContent='🗓 '+formatEventDate(item.startAt);
+ $('attendance-event-place').textContent='📍 '+item.place;
+ $('attendance-form').reset();
+ $('attendance-demo-notice').classList.toggle('hidden',item.isDemo===false);
+ const tooLate=new Date(item.startAt).getTime()<=Date.now()+24*3600*1000;
+ $('attendance-form').classList.toggle('hidden',tooLate);
+ $('attendance-reminder-unavailable').classList.toggle('hidden',!tooLate);
+ $('attendance-feedback').textContent='';$('attendance-feedback').className='text-sm mt-3';
+ $('attendance-submit').textContent=apiBaseUrl&&item.isDemo===false?'Confirmar recordatorio por email':'Solicitar recordatorio (requiere API)';
+ $('email-mode-badge').textContent=apiBaseUrl&&item.isDemo===false?'(API configurada)':'(integración pendiente)';
+ $('attendance-modal').classList.remove('hidden');$('attendance-modal').classList.add('flex');
+ $('attendance-download-ics').focus();
+}
+function closeAttendanceModal(){
+ $('attendance-modal').classList.add('hidden');$('attendance-modal').classList.remove('flex');selectedAttendanceEvent=null;
+}
+function toIcsUtc(date){return date.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');}
+function escapeIcs(value){return String(value).replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');}
+// Fold ICS lines at 75 UTF-8 octets, respecting Unicode code points.
+function foldIcsLine(line){
+ let result='', octets=0;
+ for(const cp of line){
+  const size=new TextEncoder().encode(cp).length;
+  if(octets+size>75){result+='\r\n ';octets=1;}
+  result+=cp;octets+=size;
+ }
+ return result;
+}
+function buildIcs(item){
+ const start=new Date(item.startAt), hasDuration=Number.isFinite(item.durationMinutes)&&item.durationMinutes>0;
+ const end=hasDuration?new Date(start.getTime()+item.durationMinutes*60000):null;
+ const demo=item.isDemo!==false;
+ const description=(demo?'Evento FICTICIO de demostración de JujuyTech. No corresponde a una actividad confirmada.\n':'Evento publicado en JujuyTech.\n')+(item.description||'');
+ const lines=[
+  'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//JujuyTech//Calendario//ES',
+  'CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
+  'UID:evento-'+item.id+'@xthoqiflylgazscokhws.supabase.co',
+  'DTSTAMP:'+toIcsUtc(new Date()),
+  'DTSTART:'+toIcsUtc(start),...(end?['DTEND:'+toIcsUtc(end)]:[]),
+  'SUMMARY:'+escapeIcs((demo?'[DEMO] ':'')+item.title),
+  'DESCRIPTION:'+escapeIcs(description),
+  'LOCATION:'+escapeIcs(item.place+', Argentina'),
+  'STATUS:'+(demo?'TENTATIVE':'CONFIRMED'),'BEGIN:VALARM','ACTION:DISPLAY',
+  'DESCRIPTION:'+escapeIcs('Faltan 24 horas para el evento: '+item.title),
+  'TRIGGER:-PT24H','END:VALARM','END:VEVENT','END:VCALENDAR'
+ ];
+ return lines.map(foldIcsLine).join('\r\n')+'\r\n';
+}
+function downloadSelectedEventIcs(){
+ const item=getSelectedEvent();if(!item)return;
+ const url=URL.createObjectURL(new Blob([buildIcs(item)],{type:'text/calendar;charset=utf-8'}));
+ const a=document.createElement('a');a.href=url;a.download='jujuytech-evento-'+item.id+'.ics';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ const feedback=$('attendance-feedback');feedback.className='text-sm mt-3 text-indigo-800';
+ feedback.textContent='Archivo .ics descargado. Importalo en tu calendario y verificá la alerta de 24 horas.'+(item.isDemo===false?'':' La fecha es ficticia.');
+}
+function openSelectedGoogleCalendar(){
+ const item=getSelectedEvent();if(!item)return;
+ const start=new Date(item.startAt),hasDuration=Number.isFinite(item.durationMinutes)&&item.durationMinutes>0;
+ const end=new Date(start.getTime()+(hasDuration?item.durationMinutes:60)*60000);
+ const demo=item.isDemo!==false;
+ const params=new URLSearchParams({action:'TEMPLATE',text:(demo?'[DEMO] ':'')+item.title,dates:toIcsUtc(start)+'/'+toIcsUtc(end),details:(demo?'Evento FICTICIO de demostración. ':'')+(!hasDuration?'Hora de finalización no informada: se propone 1 hora editable en Google Calendar. ':'')+'Configurá manualmente el aviso de 24 horas.',location:item.place+', Argentina'});
+ window.open('https://calendar.google.com/calendar/render?'+params.toString(),'_blank','noopener,noreferrer');
+ const feedback=$('attendance-feedback');feedback.className='text-sm mt-3 text-indigo-800';
+ feedback.textContent='Se abrió Google Calendar. Configurá allí el recordatorio de 24 horas.'+(!hasDuration?' Como no conocemos la hora de fin, revisá la duración propuesta de 1 hora.':'');
+}
+$('attendance-form').addEventListener('submit',async event=>{
+ event.preventDefault();if(!$('attendance-form').reportValidity())return;
+ const item=getSelectedEvent();if(!item)return;
+ const feedback=$('attendance-feedback');
+ if(!apiBaseUrl||item.isDemo!==false){
+  feedback.className='text-sm mt-3 text-amber-800';
+  feedback.textContent='No hay API configurada para registrar el recordatorio. No se guardó el correo y no se enviará ningún mensaje. Podés descargar el calendario desde el botón superior.';
+  return;
+ }
+ const button=$('attendance-submit');button.disabled=true;button.textContent='Registrando...';
+ try{
+  const res=await fetch(apiBaseUrl+'/api/attendances',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId:item.id,email:$('attendance-contact').value.trim(),reminderConsent:$('attendance-consent').checked,newsConsent:$('attendance-channel-consent').checked})});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(data.detail||data.message||'No se pudo registrar el recordatorio.');
+  feedback.className='text-sm mt-3 text-green-800';
+  feedback.textContent='Solicitud registrada en el servidor. '+(data.message||'El recordatorio quedó pendiente de procesamiento.');
+  $('attendance-form').reset();
+ }catch(err){feedback.className='text-sm mt-3 text-red-700';feedback.textContent='No se registró el recordatorio: '+err.message;}
+ finally{button.disabled=false;button.textContent='Confirmar recordatorio por email';}
+});
+$('attendance-modal').addEventListener('click',e=>{if(e.target===$('attendance-modal'))closeAttendanceModal();});
+
+$('event-proposal-form').addEventListener('submit',e=>{e.preventDefault();$('proposal-feedback').textContent='Formulario validado localmente. No se guardaron datos ni se envió la propuesta.';});
+$('admin-modal').addEventListener('click',e=>{if(e.target===$('admin-modal'))closeAdminModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAdminModal();closeAttendanceModal();}});
+renderEvents();renderFeatured();loadPublishedEvents();if(window.lucide)lucide.createIcons();
+</script>
+<script>
+/* JujuyTech V7.3 — mapa interactivo actualizado desde index2 (1).html */
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const canvas = $('event-map');
+  if (!canvas) return;
+  const city = [-65.2995, -24.1858];
+  const demoEvents = [
+    {id:-101,title:'Feria de Emprendedores - Xibi Xibi',category:'Feria',place:'Parque Lineal Xibi Xibi (Pte. Gorriti)',dateLabel:'Sábado, 16:00 a 22:00 hs · fecha a confirmar',description:'Stands de diseño jujeño, plantas ornamentales, artesanías y música en vivo a orillas del río.',longitude:-65.2970,latitude:-24.1915,image:'assets/feria-xibi-xibi.webp',isDemo:true},
+    {id:-102,title:'Paseo de las Luces & Salón de la Bandera',category:'Cultura',place:'Plaza Belgrano - Casa de Gobierno',dateLabel:'Viernes a domingo, 19:30 hs · fecha a confirmar',description:'Visita histórica a las esculturas de Lola Mora y a la Bandera Nacional donada por el Gral. Belgrano.',longitude:-65.3035,latitude:-24.1856,image:'assets/paseo-de-las-luces.webp',isDemo:true},
+    {id:-103,title:'Jujuy Tech & Startups Meetup',category:'Networking',place:'Club de Emprendedores (Parque San Martín)',dateLabel:'Miércoles, 18:30 hs · fecha a confirmar',description:'Charlas de programación, inteligencia artificial, startups e inversión con networking libre.',longitude:-65.31433895153002,latitude:-24.18383396143092,image:'assets/jujuy-startups.webp',isDemo:true},
+    {id:-104,title:'Taller de Marketing Digital e IA',category:'Capacitación',place:'CPV Barrio Chijra',dateLabel:'Lunes, 16:00 hs · fecha a confirmar',description:'Herramientas gratuitas para comerciantes locales: creación de contenido y automatización.',longitude:-65.29683966865461,latitude:-24.175888930962845,image:'assets/marketing-digital-ia.webp',isDemo:true},
+    {id:-105,title:'Gala Sinfónica en Teatro Mitre',category:'Cultura',place:'Teatro Mitre (Alvear 1009)',dateLabel:'Sábado, 21:00 hs · fecha a confirmar',description:'Concierto especial de obras clásicas y música folclórica andina sinfónica.',longitude:-65.30730979878935,latitude:-24.18417125038207,image:'assets/gala-sinfonica.webp',isDemo:true},
+    {id:-106,title:'Patio Gastronómico de la Estación',category:'Feria',place:'Vieja Estación (CC Manuel Belgrano)',dateLabel:'Jueves a domingo, 20:00 hs · fecha a confirmar',description:'Foodtrucks regionales, humitas, tamales, y espectáculos.',longitude:-65.29865498018445,latitude:-24.18321215473975,image:'assets/patio-gastronomico.webp',isDemo:true}
+  ];
+  // Coordenadas que incluye el mapa proporcionado, solo para previsualización.
+  // Si la API tiene coordenadas, se utilizan las persistidas en Supabase.
+  const referenceGeo = {
+    'composicion a traves de la metafora':[-65.30011546061345,-24.18646222113594],
+    'taller de coplas elsa tapia':[-65.31144184570724,-24.185562489009982],
+    'encuentro de jujenos autores':[-65.31140748405296,-24.185704121229303],
+    'grafismo carne y huesos':[-65.300255796675,-24.186574638370086],
+    'del artista al publico':[-65.30018069482195,-24.186743464306094]
+  };
+  const palette = {Feria:'#10b981',Cultura:'#f59e0b',Networking:'#06b6d4','Capacitación':'#a855f7',
+    'Arte y formación':'#ef4444','Arte y creatividad':'#f97316','Dibujo y artes visuales':'#0d9488',
+    'Literatura y tradición':'#2563eb','Literatura y encuentros':'#ec4899'};
+  let map=null,mapReady=false,allEvents=[],displayed=[],selected=null,markers=[],selectedPopup=null;
+  let filter='Todas',dark=true,threeD=true,orbiting=false,orbitFrame=null;
+  const text=(value)=>String(value??'');
+  const clean=s=>text(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,' ').trim().toLowerCase();
+  const colorOf=e=>palette[e.category]||(clean(e.category).includes('literatura')?'#ec4899':'#0d9488');
+  const timeLabel=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Jujuy',weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
+  const formatDate=e=>e.dateLabel||(e.startAt&&!Number.isNaN(new Date(e.startAt).getTime())?timeLabel.format(new Date(e.startAt))+' hs':'Fecha sin confirmar');
+  const putStatus=value=>{const el=$('map-status');if(el)el.textContent=value;};
+  const knownPosition=e=>{
+    const lat=Number(e.latitude),lon=Number(e.longitude);
+    if(e.latitude!=null&&e.longitude!=null&&Number.isFinite(lat)&&Number.isFinite(lon)&&lat>-25.6&&lat<-22&&lon>-67&&lon<-64)return [lon,lat];
+    return referenceGeo[clean(e.title)]||null;
+  };
+  const categoryOf=e=>{
+    if(e.isDemo)return e.category;
+    const cat=clean(e.category);
+    return cat.includes('formacion')||cat.includes('taller')||cat.includes('dibujo')||cat.includes('creatividad')?'Capacitación':'Cultura';
+  };
+  const canAttend=e=>!e.isDemo&&!!e.startAt&&Number.isInteger(Number(e.id))&&Number(e.id)>0;
+  const searchUrl=e=>'https://www.openstreetmap.org/search?query='+encodeURIComponent(e.place+', Jujuy, Argentina');
+  function normPublic(e){
+    return {...e,isDemo:false,latitude:e.latitude??null,longitude:e.longitude??null,category:e.category||'Cultura'};
+  }
+  function filtered(){return allEvents.filter(e=>filter==='Todas'||categoryOf(e)===filter);}
+  function pinNode(e){
+    const button=document.createElement('button');button.type='button';button.className='jt-map-pin';
+    button.style.setProperty('--jt-pin',colorOf(e));button.setAttribute('aria-label','Ver '+e.title);
+    const point=document.createElement('span');point.className='jt-map-pin-dot';button.append(point);
+    button.addEventListener('click',()=>select(e.id));return button;
+  }
+  function popupNode(e){
+    const panel=document.createElement('div');panel.className='jt-map-popup';
+    if(e.image){const img=document.createElement('img');img.src=e.image;img.alt='Imagen de '+e.title;img.loading='lazy';panel.append(img);}
+    const label=document.createElement('div');label.className='jt-map-category';label.style.color=colorOf(e);
+    label.textContent=e.category+(e.isDemo?' · EJEMPLO':'');panel.append(label);
+    const heading=document.createElement('h5');heading.className='jt-map-popup-title';heading.textContent=e.title;panel.append(heading);
+    for(const content of ['📍 '+e.place,'🕒 '+formatDate(e),e.description||'']){
+      const p=document.createElement('p');p.textContent=content;panel.append(p);
+    }
+    if(canAttend(e)){
+      const b=document.createElement('button');b.type='button';b.className='jt-map-popup-button';
+      b.textContent='✓ Asistir / Calendario / Email';
+      b.addEventListener('click',()=>window.openAttendanceModal?.(Number(e.id)));
+      panel.append(b);
+    }else{
+      const note=document.createElement('p');note.style.color='#fcd34d';
+      note.textContent='Evento demostrativo sin fecha confirmada. No admite inscripción ni recordatorios.';
+      panel.append(note);
+    }
+    const a=document.createElement('a');a.href=searchUrl(e);a.target='_blank';a.rel='noopener noreferrer';
+    a.textContent='Consultar dirección ↗';a.style.cssText='display:block;margin-top:9px;text-decoration:underline;color:#6ee7b7;';panel.append(a);
+    return panel;
+  }
+  function clearMarkers(){for(const m of markers)m.remove();markers=[];selectedPopup?.remove();selectedPopup=null;}
+  function updatePins(){
+    if(!mapReady||!map)return;
+    clearMarkers();
+    for(const ev of displayed){
+      const coords=knownPosition(ev);if(!coords)continue;
+      const marker=new maplibregl.Marker({element:pinNode(ev),anchor:'center'}).setLngLat(coords).addTo(map);
+      markers.push(marker);
+    }
+    if(selected){const ev=displayed.find(x=>String(x.id)===String(selected));if(ev)focusEvent(ev,false);}
+  }
+  function renderSidebar(){
+    const list=$('map-events-list');if(!list)return;list.replaceChildren();
+    if(!displayed.length){const p=document.createElement('p');p.className='text-xs text-slate-300 p-3';p.textContent='No hay eventos para esta categoría.';list.append(p);return;}
+    for(const e of displayed){
+      const b=document.createElement('button');b.type='button';b.className='jt-map-card';
+      b.setAttribute('data-event-map-id',String(e.id));b.setAttribute('aria-pressed',String(selected===e.id));
+      if(e.image){const img=document.createElement('img');img.src=e.image;img.className='jt-map-image';img.alt='Imagen ilustrativa de '+e.title;img.loading='lazy';b.append(img);}
+      const content=document.createElement('div');content.className='jt-map-card-content';
+      const category=document.createElement('span');category.className='jt-map-category';category.style.color=colorOf(e);category.textContent=e.category;content.append(category);
+      const title=document.createElement('strong');title.textContent=e.title;content.append(title);
+      const where=document.createElement('small');where.textContent='📍 '+e.place;content.append(where);
+      const when=document.createElement('small');when.textContent='🕒 '+formatDate(e);content.append(when);
+      if(e.isDemo){const tag=document.createElement('span');tag.className='jt-map-demo';tag.textContent='SOLO DEMOSTRACIÓN';content.append(tag);}
+      b.append(content);b.addEventListener('click',()=>select(e.id));list.append(b);
+    }
+  }
+  function syncSidebarSelected(){
+    document.querySelectorAll('[data-event-map-id]').forEach(el=>{
+      const on=el.getAttribute('data-event-map-id')===String(selected);
+      el.setAttribute('aria-pressed',String(on));
+      if(on)el.scrollIntoView({behavior:'smooth',block:'nearest'});
+    });
+  }
+  function focusEvent(e,animate=true){
+    if(!map||!mapReady)return;
+    const coords=knownPosition(e);
+    if(!coords){putStatus('Este evento no tiene coordenadas disponibles. Consultá la dirección en OpenStreetMap.');return;}
+    selectedPopup?.remove();
+    selectedPopup=new maplibregl.Popup({offset:23,maxWidth:'300px'}).setLngLat(coords).setDOMContent(popupNode(e)).addTo(map);
+    if(animate)map.flyTo({center:coords,zoom:16.8,pitch:threeD?62:0,bearing:threeD?-25:0,speed:1.2,curve:1.4,essential:true});
+    putStatus((e.isDemo?'⚠️ Ejemplo · ':'📍 ')+e.title+' · '+e.place);
+  }
+  function select(id){
+    let e=displayed.find(x=>String(x.id)===String(id));
+    if(!e){const other=allEvents.find(x=>String(x.id)===String(id));if(!other)return;
+      filter='Todas';renderFilter();displayed=filtered();renderSidebar();updatePins();e=other;}
+    selected=e.id;syncSidebarSelected();
+    if(!mapReady){initMap();return;}
+    focusEvent(e,true);
+  }
+  function renderFilter(){document.querySelectorAll('.jt-map-filter').forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.filter===filter)));}
+  function setFilter(value){filter=value;selected=null;displayed=filtered();renderFilter();renderSidebar();updatePins();if(displayed.length&&mapReady)putStatus(displayed.length+' eventos en '+(filter==='Todas'?'todas las categorías':filter)+'. Elegí uno para ver su lugar.');}
+  function refresh(items){
+    const real=Array.isArray(items)?items.map(normPublic):[];
+    allEvents=[...real,...demoEvents];
+    displayed=filtered();renderSidebar();renderFilter();
+    if(mapReady)updatePins();
+  }
+  function addBuildings(){
+    if(!map||!mapReady||map.getLayer('jt-3d-buildings'))return;
+    try{
+      const style=map.getStyle();const source=Object.entries(style.sources||{}).find(([,s])=>s.type==='vector');
+      const label=(style.layers||[]).find(layer=>layer.type==='symbol'&&layer.layout?.['text-field']);
+      if(!source)return;
+      map.addLayer({id:'jt-3d-buildings',source:source[0],'source-layer':'building',type:'fill-extrusion',minzoom:13.5,
+        paint:{'fill-extrusion-color':['interpolate',['linear'],['coalesce',['get','render_height'],10],0,'#1e293b',15,'#334155',30,'#0284c7'],
+        'fill-extrusion-height':['interpolate',['linear'],['zoom'],13.5,0,14.5,['coalesce',['get','render_height'],12]],
+        'fill-extrusion-base':['interpolate',['linear'],['zoom'],13.5,0,14.5,['coalesce',['get','render_min_height'],0]],
+        'fill-extrusion-opacity':.8}},label?.id);
+    }catch(_){/* estilos sin edificio 3D conservan la cámara inclinada */}
+  }
+  function showFallback(message){const el=$('map-fallback');el?.classList.remove('hidden');const p=$('map-fallback-info');if(p)p.textContent=message;putStatus(message);}
+  function initMap(){
+    if(map)return;
+    if(!window.maplibregl||!maplibregl.supported()){showFallback('MapLibre no está disponible. Revisá conexión a Internet o soporte WebGL.');return;}
+    try{
+      map=new maplibregl.Map({container:canvas,style:'https://tiles.openfreemap.org/styles/dark',center:city,zoom:15.3,pitch:58,bearing:-17.6,antialias:true});
+      map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
+      map.on('style.load',()=>{mapReady=true;addBuildings();updatePins();putStatus('Mapa 3D listo. Elegí un evento del panel.');});
+      map.on('error',e=>{if(/fetch|network|Failed to|style/i.test(String(e?.error?.message||'')))putStatus('No se pudieron cargar algunos recursos del mapa. Verificá Internet.');});
+      map.on('mousedown',stopOrbit);map.on('touchstart',stopOrbit);
+    }catch(_){showFallback('No fue posible iniciar el mapa 3D en este navegador.');}
+  }
+  function stopOrbit(){orbiting=false;if(orbitFrame!==null)cancelAnimationFrame(orbitFrame);orbitFrame=null;$('map-orbit-toggle')?.setAttribute('aria-pressed','false');}
+  function orbit(){if(!orbiting||!map)return;map.setBearing((map.getBearing()+.21)%360);orbitFrame=requestAnimationFrame(orbit);}
+  function toggleOrbit(){if(orbiting){stopOrbit();return;}initMap();if(!map)return;orbiting=true;$('map-orbit-toggle')?.setAttribute('aria-pressed','true');orbit();}
+  function resetMap(){stopOrbit();initMap();selected=null;syncSidebarSelected();selectedPopup?.remove();map?.flyTo({center:city,zoom:15.3,pitch:threeD?58:0,bearing:threeD?-17.6:0,speed:1.1});putStatus('Mapa centrado en San Salvador de Jujuy.');}
+  $('map-orbit-toggle')?.addEventListener('click',toggleOrbit);
+  $('map-pitch-toggle')?.addEventListener('click',()=>{threeD=!threeD;initMap();map?.easeTo({pitch:threeD?58:0,bearing:threeD?-17.6:0,duration:850});$('map-pitch-toggle').textContent=threeD?'🧭 Inclinación 3D (On)':'🏙️ Vista 2D cenital';});
+  $('map-theme-toggle')?.addEventListener('click',()=>{dark=!dark;initMap();if(map){mapReady=false;map.setStyle('https://tiles.openfreemap.org/styles/'+(dark?'dark':'liberty'));}$('map-theme-toggle').textContent=dark?'☀️ Modo Día / Calles':'🌙 Modo Futurista';});
+  $('map-sidebar-reset')?.addEventListener('click',resetMap);
+  $('jt-map-filters')?.addEventListener('click',e=>{const btn=e.target.closest('[data-filter]');if(btn)setFilter(btn.dataset.filter);});
+  window.jujuyMapSelect=e=>select(e.id);
+  window.jujuyMapRefresh=refresh;
+  refresh((typeof events!=='undefined'&&Array.isArray(events))?events:[]);
+  initMap();
+  window.addEventListener('resize',()=>map?.resize());
+})();
+</script>
+
+<script>
+/* JujuyTech V8: Supabase Auth + permisos desde public.user_profiles.
+   No se leen roles de user_metadata. Los roles son de base de datos (RLS). */
+(() => {
+  'use strict';
+  const config = {
+    url: window.JUJUYTECH_SUPABASE_URL || 'https://xthoqiflylgazscokhws.supabase.co',
+    publishableKey: window.JUJUYTECH_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_hLykGuoaA-J3NNPWkl5qsw_wGRdGzdK'
+  };
+  const byId = id => document.getElementById(id);
+  const rolePaths = {community:'/comunidad',business:'/empresarios',municipality:'/municipio'};
+  const labels = {community:'Comunidad',business:'Red Empresarial',municipality:'Municipio / Admin'};
+  let supabase, activeRole='community', authMode='login', currentProfile=null, currentSession=null, busy=false;
+  const form=byId('jt-auth-form');
+  const feedback=(message,ok=false)=>{byId('jt-auth-feedback').textContent=message;byId('jt-auth-feedback').dataset.status=ok?'ok':'error';};
+  const pendingRoleKey='jt_v8_requested_role';
+  const authCallbackUrl=()=>location.origin+location.pathname+'#/acceso';
+  const googleButton=byId('jt-login-google');
+  const oauthBrowserOK=()=>/^https?:$/.test(location.protocol);
+  function oauthFeedback(){
+    const params=new URLSearchParams(location.search);
+    const error=params.get('error_description')||params.get('error');
+    if(error){
+      feedback('Google no completó el acceso: '+error);
+      // Quitar datos de error de la URL al finalizar, sin descartar el hash del portal.
+      const next=location.pathname+location.hash;
+      try{history.replaceState(null,'',next);}catch(_){}
+    }
+  }
+  function routeFor(role){return '#'+rolePaths[role];}
+  function setSelectedRole(role){
+    activeRole=role;
+    document.querySelectorAll('[data-jt-role]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.jtRole===role)));
+    byId('jt-role-note').textContent=role==='municipality'?'Acceso exclusivo para cuentas municipales autorizadas. No se puede registrar desde esta pantalla.':
+      role==='business'?'Accedé para crear propuestas y conectar con emprendedores.':'Accedé para descubrir eventos y participar.';
+    if(role==='municipality'&&authMode==='register') setMode('login');
+  }
+  function setMode(mode){
+    authMode=mode;
+    byId('jt-login-heading').textContent=mode==='register'?'Crear cuenta JujuyTech':mode==='reset'?'Recuperar contraseña':'¡Bienvenido de nuevo!';
+    byId('jt-auth-caption').textContent=mode==='register'?'Registrate con tu correo y elegí tu comunidad.':mode==='reset'?'Te enviaremos un enlace para restablecer tu contraseña.':'Elegí un portal para entrar sin cuenta o iniciá sesión para acceder con tu perfil.';
+    byId('jt-auth-password').closest('label')?.classList.remove('hidden');
+    const passwd=byId('jt-auth-password');
+    passwd.previousElementSibling.classList.toggle('hidden',mode==='reset');
+    passwd.classList.toggle('hidden',mode==='reset');passwd.required=mode!=='reset';
+    byId('jt-submit-auth').textContent=mode==='register'?'Registrarme':mode==='reset'?'Enviar enlace':'Iniciar sesión';
+    byId('jt-register-toggle').textContent=mode==='login'?'Crear una cuenta':'Volver al acceso';
+    byId('jt-login-google').classList.toggle('hidden',mode==='reset');
+    feedback('');
+  }
+  let visitorRole = null;
+  function enterAsVisitor(role){
+    visitorRole = role;
+    currentProfile = null;
+    currentSession = null;
+    document.body.classList.remove('jt-logged-out');
+    document.body.classList.add('jt-auth-ready','jt-logged-in');
+    document.body.classList.toggle('jt-chat-enabled',role==='community'||role==='business');
+    ['community','business','dashboard'].forEach(id=>byId('view-'+id)?.classList.toggle('hidden',id!==(role==='municipality'?'dashboard':role)));
+    byId('jt-active-portal').textContent = labels[role] + ' · Invitado';
+    byId('jt-active-email').textContent = role==='municipality' ? 'Vista demostrativa · sin acceso a datos privados' : 'Exploración pública';
+    byId('jt-signin-from-guest').classList.remove('hidden');
+    byId('jt-logout').textContent='Volver al inicio';
+    if(role==='municipality' && typeof window.renderDashboard==='function') window.renderDashboard();
+    location.hash=rolePaths[role];
+    window.scrollTo({top:0,behavior:'instant'});
+    window.dispatchEvent(new Event('resize'));
+    if(role==='community')window.jujuyMapRefresh?.(typeof events!=='undefined'?events:[]);
+  }
+  function setViewAuthorized(role){
+    visitorRole = null;
+    byId('jt-signin-from-guest').classList.add('hidden');
+    byId('jt-logout').textContent='Cerrar sesión';
+    ['community','business','dashboard'].forEach(id=>byId('view-'+id)?.classList.toggle('hidden',id!==(role==='municipality'?'dashboard':role)));
+    byId('jt-active-portal').textContent=labels[role];
+    byId('jt-active-email').textContent=currentSession?.user?.email || '';
+    document.body.classList.remove('jt-logged-out');document.body.classList.add('jt-auth-ready','jt-logged-in');
+    document.body.classList.toggle('jt-chat-enabled',role==='community'||role==='business');
+    if(role==='municipality'){
+      // El dashboard actual sigue siendo demostrativo. No consulta datos privados.
+      if(typeof window.renderDashboard==='function')window.renderDashboard();
+    }
+    window.location.hash=rolePaths[role];
+    window.scrollTo({top:0,behavior:'instant'});
+    window.dispatchEvent(new Event('resize'));
+    if(role==='community')window.jujuyMapRefresh?.(typeof events!=='undefined'?events:[]);
+  }
+  function showLogin(message=''){
+    currentSession=null;currentProfile=null;visitorRole=null;
+    document.body.classList.remove('jt-logged-in');document.body.classList.add('jt-logged-out','jt-auth-ready');
+    document.body.classList.remove('jt-chat-enabled');
+    byId('jt-signin-from-guest').classList.add('hidden');
+    if(window.location.hash!=='#/acceso')window.location.hash='/acceso';
+    if(message)feedback(message);
+  }
+  async function fetchProfile(user){
+    if(!user)return null;
+    const {data,error}=await supabase.from('user_profiles').select('role,display_name,user_id').eq('user_id',user.id).single();
+    if(error)throw new Error('No se pudo verificar el perfil de acceso. '+error.message);
+    if(!['community','business','municipality'].includes(data.role))throw new Error('Perfil no autorizado.');
+    return data;
+  }
+  async function signInSession(){
+    const {data:{session},error}=await supabase.auth.getSession();
+    if(error)throw error;
+    if(!session){showLogin();return;}
+    currentSession=session;
+    currentProfile=await fetchProfile(session.user);
+    const wanted=sessionStorage.getItem(pendingRoleKey);
+    if(wanted==='business'&&currentProfile.role==='community'){
+      // La política SQL restringe esta actualización al alta inicial.
+      const {data,error:upgradeError}=await supabase.from('user_profiles').update({role:'business'}).eq('user_id',session.user.id).select('role').single();
+      if(!upgradeError&&data?.role==='business')currentProfile.role='business';
+      else feedback('Tu cuenta tiene un perfil Comunidad. Para cambiarlo, solicitá autorización.');
+    }
+    sessionStorage.removeItem(pendingRoleKey);
+    setViewAuthorized(currentProfile.role);
+  }
+  async function start(){
+    document.body.classList.add('jt-auth-ready');
+    if(!oauthBrowserOK()){
+      showLogin('Para registrarte o ingresar con Google, abrí JujuyTech desde http://localhost:5500. No funciona desde file:// porque la autenticación exige una dirección web.');
+      byId('jt-submit-auth').disabled=true;
+      googleButton.disabled=true;
+      return;
+    }
+    if(!window.supabase?.createClient){
+      showLogin('No se cargó Supabase Auth. Revisá Internet o los bloqueadores del navegador.');
+      byId('jt-submit-auth').disabled=true;
+      googleButton.disabled=true;
+      return;
+    }
+    supabase=window.supabase.createClient(config.url,config.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+    window.jtSupabase=supabase;
+    try{await signInSession();}catch(e){showLogin(e.message);}
+    oauthFeedback();
+    supabase.auth.onAuthStateChange((event)=>{
+      if(event==='SIGNED_OUT')showLogin();
+      if(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'){
+        // Evitar llamadas a Supabase en el callback sincrónico de Auth.
+        Promise.resolve().then(()=>signInSession().catch(e=>showLogin(e.message)));
+      }
+    });
+  }
+  document.querySelectorAll('[data-jt-role]').forEach(button=>button.addEventListener('click',()=>{setSelectedRole(button.dataset.jtRole);enterAsVisitor(button.dataset.jtRole);}));
+  byId('jt-register-toggle').addEventListener('click',()=>setMode(authMode==='login'?'register':'login'));
+  byId('jt-forgot-password').addEventListener('click',()=>setMode('reset'));
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(!oauthBrowserOK()){feedback('No es posible registrar la cuenta desde file://. Abrí http://localhost:5500 y volvé a intentarlo.');return;}
+    if(!supabase){feedback('Sin conexión con Supabase Auth. Revisá que estés en http://localhost:5500 y tengas acceso a Internet.');return;}
+    if(busy)return;
+    const email=byId('jt-auth-email').value.trim(),password=byId('jt-auth-password').value;
+    if(authMode==='register'&&activeRole==='municipality'){feedback('El registro municipal requiere invitación de un administrador.');return;}
+    busy=true;byId('jt-submit-auth').disabled=true;feedback('Conectando con Supabase...');
+    try{
+      if(authMode==='reset'){
+        const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname+'#/acceso'});
+        if(error)throw error;feedback('Si la cuenta existe, recibirás un email de recuperación.',true);return;
+      }
+      if(authMode==='register'){
+        const {data,error}=await supabase.auth.signUp({email,password,options:{data:{portal:activeRole},emailRedirectTo:location.origin+location.pathname+'#/acceso'}});
+        if(error)throw error;
+        if(!data.session){setMode('login');feedback('Registro solicitado. Revisá tu correo y confirmá la cuenta antes de ingresar. Si no llega el email, revisá Spam.',true);return;}
+        await signInSession();return;
+      }
+      const {error}=await supabase.auth.signInWithPassword({email,password});
+      if(error)throw error;
+      await signInSession();
+      if(currentProfile?.role!==activeRole)feedback('Ingresaste con tu perfil autorizado: '+labels[currentProfile.role]+'.',true);
+    }catch(e){
+      const message=String(e.message||'No se pudo iniciar sesión.');
+      feedback(message.includes('Email not confirmed')?'Tenés que confirmar tu correo antes de ingresar. Revisá la bandeja de entrada y Spam.':message);
+    }
+    finally{busy=false;byId('jt-submit-auth').disabled=false;}
+  });
+  googleButton.addEventListener('click',async()=>{
+    if(busy)return;
+    if(!oauthBrowserOK()){
+      feedback('Google requiere abrir JujuyTech desde http://localhost:5500 o un sitio HTTPS, no desde file://.');
+      return;
+    }
+    if(!supabase){feedback('No está disponible Supabase Auth. Revisá la conexión a Internet.');return;}
+    if(authMode==='register'&&activeRole==='municipality'){
+      feedback('No se puede crear una cuenta de Municipio. Necesitás una cuenta previamente autorizada.');return;
+    }
+    if(activeRole==='municipality'){
+      feedback('Google solo permite el ingreso al municipio si tu usuario ya tiene ese rol autorizado.',true);
+    }else{
+      feedback(authMode==='register'?'Abriendo Google para crear tu cuenta...':'Redirigiendo a Google... ',true);
+    }
+    // Se conserva el perfil pedido solo durante el retorno OAuth; la base decide permisos.
+    if(activeRole==='business')sessionStorage.setItem(pendingRoleKey,'business');
+    else sessionStorage.removeItem(pendingRoleKey);
+    busy=true;googleButton.disabled=true;
+    try{
+      const {error}=await supabase.auth.signInWithOAuth({
+        provider:'google',
+        options:{
+          redirectTo:authCallbackUrl(),
+          queryParams:{prompt:'select_account'}
+        }
+      });
+      if(error)throw error;
+    }catch(error){
+      sessionStorage.removeItem(pendingRoleKey);
+      feedback('No se pudo iniciar el registro con Google: '+(error.message||String(error)));
+    }finally{busy=false;googleButton.disabled=false;}
+  });
+  byId('jt-signin-from-guest').addEventListener('click',()=>{const selected=visitorRole||'community';showLogin();setSelectedRole(selected);setMode('login');});
+  byId('jt-logout').addEventListener('click',async()=>{if(visitorRole){showLogin();return;}if(supabase)await supabase.auth.signOut();showLogin('Sesión cerrada.');});
+  window.addEventListener('hashchange',()=>{
+    if(visitorRole){if(location.hash!==routeFor(visitorRole))location.hash=rolePaths[visitorRole];return;}
+    if(!currentProfile)return;
+    const route=location.hash;
+    if(route!==routeFor(currentProfile.role))location.hash=rolePaths[currentProfile.role];
+  });
+  // Reemplazar las entradas públicas antiguas al dashboard, que sólo tenía datos ficticios.
+  window.switchView = view=>{
+    if(visitorRole){if(view===(visitorRole==='municipality'?'dashboard':visitorRole))enterAsVisitor(visitorRole);return;}
+    if(!currentProfile){showLogin('Elegí un portal o iniciá sesión.');return;}
+    const allowed=currentProfile.role==='municipality'?'dashboard':currentProfile.role;
+    if(view!==allowed)return;
+    setViewAuthorized(currentProfile.role);
+  };
+  window.openAdminModal=()=>{
+    if(currentProfile?.role==='municipality')setViewAuthorized('municipality');
+    else if(visitorRole==='municipality')enterAsVisitor('municipality');
+    else if(visitorRole)enterAsVisitor('municipality');
+    else feedback('Para el panel privado necesitás una cuenta municipal autorizada.');
+  };
+  window.showDashboardDemo=()=>{
+    if(visitorRole==='municipality'){enterAsVisitor('municipality');return;}
+    if(currentProfile?.role!=='municipality')return;
+    setViewAuthorized('municipality');
+  };
+  window.leaveDashboard=()=>{if(visitorRole){showLogin();return;}if(currentProfile?.role==='municipality')setViewAuthorized('municipality');};
+  start();
+})();
+</script>
+
+<!-- Hacki: el widget aparece únicamente con rol verificado community/business. -->
+<script src="hacki/widget.js" data-nombre="Hacki" data-color="#5146f6" data-posicion="derecha" data-faq="hacki/faq.json" data-eventos="hacki/eventos.json" data-api="/api/chat" defer></script>
+</body></html>
