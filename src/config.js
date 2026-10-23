@@ -1,2 +1,2 @@
-// Copiar a config.js y editar sólo con URL pública de API. Sin secretos.
-window.JUJUY_API_BASE_URL = 'http://localhost:5000';
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co";
+export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "placeholder";
