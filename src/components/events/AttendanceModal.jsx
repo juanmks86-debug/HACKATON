@@ -75,7 +75,7 @@ export default function AttendanceModal({ evento, onCerrar }) {
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="attendance-title"
@@ -101,6 +101,16 @@ export default function AttendanceModal({ evento, onCerrar }) {
         <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-950 mt-3 space-y-1">
           <p className="font-semibold">🗓 {formatearFecha(evento.startAt)}</p>
           <p>📍 {evento.place}</p>
+        </div>
+
+        <div className="mt-4 space-y-3 text-sm text-gray-700">
+          <div>
+            <p className="font-bold text-gray-900">Descripción</p>
+            <p className="mt-1 leading-6">{evento.description || "La actividad no tiene una descripción ampliada publicada todavía."}</p>
+          </div>
+          {evento.insight && <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-indigo-950"><p className="font-bold text-indigo-800">✦ Dato útil antes de asistir</p><p className="mt-1 text-xs leading-5">{evento.insight}</p></div>}
+          <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs sm:grid-cols-2"><p><strong>Organiza:</strong> {evento.organizer || "Por confirmar"}</p><p><strong>Entrada:</strong> {evento.admissionInfo || "Condiciones por confirmar"}</p></div>
+          <div className="flex flex-wrap gap-3 text-xs font-semibold"><a href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(evento.place || "San Salvador de Jujuy")}`} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline underline-offset-2">Ver ubicación en mapa ↗</a>{evento.sourceUrl && <a href={evento.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-700 underline underline-offset-2">Ver publicación de origen ↗</a>}</div>
         </div>
 
         {esDemo && (

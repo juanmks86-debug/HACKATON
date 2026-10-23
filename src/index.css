@@ -713,6 +713,11 @@ html.night-mode .jt-map-popup {
 .jt-city-fallback-note { position: absolute; z-index: 5; right: 16px; bottom: 14px; max-width: 350px; margin: 0; padding: 8px 11px; border: 1px solid #64748b; border-radius: 9px; background: #07111fe8; color: #cbd5e1; font-size: 11px; }
 html.night-mode .jt-city-fallback { filter: brightness(.82) saturate(1.2); }
 
+.agenda-ticker { --agenda-step: 160px; }
+@media (min-width: 768px) {
+  .agenda-ticker { --agenda-step: 176px; }
+}
+
 .jt-city-fallback-overlay {
   left: auto;
   width: 52%;
