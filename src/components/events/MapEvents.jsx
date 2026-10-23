@@ -40,6 +40,7 @@ export default function MapEvents({ eventos, onAsistir, modoNocturno = false }) 
   const markersRef = useRef([]);
   const [seleccionado, setSeleccionado] = useState(null);
   const [mapaError, setMapaError] = useState(false);
+  const [modeloLocalVisible, setModeloLocalVisible] = useState(true);
   const geolocalizados = useMemo(
     () => eventos.filter((evento) => Number.isFinite(Number(evento.longitude)) && Number.isFinite(Number(evento.latitude))),
     [eventos]
@@ -102,14 +103,15 @@ export default function MapEvents({ eventos, onAsistir, modoNocturno = false }) 
   return (
     <div className={`jt-map-shell ${modoNocturno ? "jt-map-night" : ""}`}>
       <div ref={mapNode} id="event-map" aria-label="Mapa 3D de eventos de Jujuy" />
-      {mapaError && <div className="jt-city-fallback" aria-label="Estructura 3D demostrativa de San Salvador de Jujuy">
+      {modeloLocalVisible && <div className={`jt-city-fallback jt-city-fallback-overlay ${mapaError ? "jt-city-fallback-error" : ""}`} aria-label="Estructura 3D demostrativa de San Salvador de Jujuy">
         <div className="jt-city-fallback-title"><strong>Estructura 3D de la ciudad</strong><span>Vista local de respaldo</span></div>
         <div className="jt-city-ground">
           {[42, 72, 112, 152, 196, 238, 284, 330, 378, 424, 472, 520, 570, 620].map((x, indice) => <span key={x} className="jt-city-building" style={{ left: `${x}px`, height: `${54 + (indice % 5) * 22}px`, width: `${28 + (indice % 3) * 12}px`, animationDelay: `${indice * 35}ms` }}><i /></span>)}
           <span className="jt-city-road road-one" /><span className="jt-city-road road-two" /><span className="jt-city-park">Culturarte</span>
         </div>
-        <p className="jt-city-fallback-note">El mapa base no respondió. La vista 3D local sigue disponible; recargá cuando tengas conexión para ver calles y marcadores reales.</p>
+        <p className="jt-city-fallback-note">Modelo urbano visible sobre el mapa. Ocultalo para explorar las calles y los marcadores reales.</p>
       </div>}
+      <button type="button" className="jt-map-tool jt-city-toggle" onClick={() => setModeloLocalVisible((valor) => !valor)}>{modeloLocalVisible ? "Ocultar ciudad 3D" : "Mostrar ciudad 3D"}</button>
       <aside className="jt-map-sidebar p-3" aria-label="Eventos ubicados en el mapa">
         <div className="flex items-center justify-between gap-2 mb-2">
           <strong className="text-white text-sm">Agenda en el mapa 3D</strong>

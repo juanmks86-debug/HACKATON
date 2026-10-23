@@ -712,3 +712,28 @@ html.night-mode .jt-map-popup {
 .jt-city-park { position: absolute; left: 43%; top: 28%; display: grid; width: 110px; height: 68px; place-items: center; border: 2px solid #86efac99; border-radius: 45%; background: #166534aa; color: #bbf7d0; font-size: 10px; transform: rotate(-5deg); }
 .jt-city-fallback-note { position: absolute; z-index: 5; right: 16px; bottom: 14px; max-width: 350px; margin: 0; padding: 8px 11px; border: 1px solid #64748b; border-radius: 9px; background: #07111fe8; color: #cbd5e1; font-size: 11px; }
 html.night-mode .jt-city-fallback { filter: brightness(.82) saturate(1.2); }
+
+.jt-city-fallback-overlay {
+  left: auto;
+  width: 52%;
+  pointer-events: none;
+  border-left: 1px solid #7dd3fc55;
+  box-shadow: -18px 0 40px #07111f66;
+}
+.jt-city-fallback-overlay .jt-city-fallback-title { right: 16px; top: 18px; }
+.jt-city-toggle {
+  position: absolute;
+  z-index: 14;
+  top: 16px;
+  right: 64px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+@media (max-width: 900px) {
+  .jt-city-fallback-overlay { left: 38%; width: 62%; }
+  .jt-city-toggle { top: auto; right: 12px; bottom: 15px; }
+}
+@media (max-width: 520px) {
+  .jt-city-fallback-overlay { left: 0; width: 100%; top: 48%; border-left: 0; border-top: 1px solid #7dd3fc55; }
+  .jt-city-toggle { bottom: 10px; }
+}
