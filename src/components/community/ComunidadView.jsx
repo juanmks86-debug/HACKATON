@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import EventList from "../events/EventList.jsx";
 import FeaturedCarousel from "../events/FeaturedCarousel.jsx";
 import AttendanceModal from "../events/AttendanceModal.jsx";
@@ -13,123 +13,49 @@ const TONO = {
   error: "rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-900",
 };
 
-const CHIP = "bg-white/20 hover:bg-white/30 backdrop-blur-md px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-white/30 text-white";
+const CHIP = "bg-slate-950/30 hover:bg-slate-950/50 backdrop-blur-md px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-white/30 text-white";
 
-/** Portal Comunidad: hero con filtros, destacados, mapa (Fase 2) y agenda con búsqueda. */
 export default function ComunidadView({ eventos, mensaje }) {
   const [periodo, setPeriodo] = useState("all");
   const [consulta, setConsulta] = useState("");
   const [seleccionado, setSeleccionado] = useState(null);
-
   const visibles = useMemo(() => filtrarEventos(eventos, periodo, consulta), [eventos, periodo, consulta]);
-
   const irAlMapa = () => document.getElementById("mapa-eventos")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
-    <section id="view-community" className="space-y-8">
-      {/* Gancho y filtro horario */}
-      <div className="bg-linear-to-r from-amber-500 via-orange-500 to-red-500 rounded-2xl p-6 md:p-8 text-white shadow-xl">
-        <div className="max-w-2xl">
-          <h2 className="text-2xl md:text-4xl font-extrabold mb-2">Descubrí eventos en Jujuy</h2>
-          <p className="text-amber-100 text-sm md:text-base mb-6">
-            Explorá actividades culturales, ferias y talleres. Los eventos de esta versión son ejemplos, no una agenda
-            actualizada.
-          </p>
-
-          <a
-            href="#mapa-eventos"
-            className="inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-extrabold text-orange-800 shadow hover:bg-orange-50 mb-5"
-          >
-            📍 Explorar mapa 3D de eventos →
-          </a>
-
-          <div className="flex flex-wrap gap-2">
-            <span className="text-xs uppercase font-bold tracking-wider self-center mr-2">Filtrar por horario:</span>
-            {PERIODOS.map((valor) => (
-              <button
-                key={valor}
-                type="button"
-                onClick={() => setPeriodo(valor)}
-                aria-pressed={periodo === valor}
-                className={`${CHIP} ${periodo === valor ? "ring-2 ring-white" : ""}`}
-              >
-                {ETIQUETA_PERIODO[valor]}
-              </button>
-            ))}
+    <section id="top" className="space-y-8">
+      <section className="relative isolate overflow-hidden rounded-3xl bg-slate-900 shadow-xl" aria-labelledby="hero-title">
+        <img src="/assets/paseo-de-las-luces.webp" alt="Paisaje cultural de Jujuy" className="absolute inset-0 -z-20 h-full w-full object-cover" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-orange-800/95 via-orange-700/75 to-red-700/35" />
+        <div className="relative max-w-3xl p-7 text-white md:p-12">
+          <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-orange-100">JujuyTech · Cultura y comunidad</p>
+          <h2 id="hero-title" className="text-3xl font-extrabold leading-tight md:text-5xl">Descubrí eventos en Jujuy</h2>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-orange-50 md:text-base">Explorá actividades culturales, ferias y talleres. Los eventos de esta versión son ejemplos, no una agenda actualizada.</p>
+          <a href="#mapa-eventos" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-extrabold text-slate-900 shadow-lg transition hover:bg-orange-50"><MapPin className="h-5 w-5 text-red-600" aria-hidden="true" />Explorar mapa 3D de eventos →</a>
+          <div className="mt-7 flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-xs font-bold uppercase tracking-wider text-orange-50">Filtrar por horario:</span>
+            {PERIODOS.map((valor) => <button key={valor} type="button" onClick={() => setPeriodo(valor)} aria-pressed={periodo === valor} className={`${CHIP} ${periodo === valor ? "ring-2 ring-white" : ""}`}>{ETIQUETA_PERIODO[valor]}</button>)}
           </div>
         </div>
+      </section>
+
+      <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 md:flex-row md:items-center">
+        <div><h3 className="font-bold text-emerald-950">📣 Novedades de eventos en WhatsApp</h3><p className="mt-1 text-sm text-emerald-900">Próximamente podrás seguir el canal de difusión de JujuyTech. La publicación automática todavía requiere definir un procedimiento compatible.</p></div>
+        <span className="shrink-0 rounded-full border border-emerald-400 px-3 py-1 text-xs font-semibold text-emerald-800">Próximamente</span>
       </div>
 
-      {/* Novedades por WhatsApp */}
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        <div>
-          <h3 className="font-bold text-emerald-950">📣 Novedades de eventos en WhatsApp</h3>
-          <p className="text-sm text-emerald-900 mt-1">
-            Próximamente podrás seguir el canal de difusión de JujuyTech. La publicación automática en Canales no está
-            disponible en la API oficial de WhatsApp: esta integración requiere definir un procedimiento de publicación
-            compatible.
-          </p>
-        </div>
-        <span className="shrink-0 rounded-full border border-emerald-400 text-emerald-800 font-semibold text-xs px-3 py-1">
-          Próximamente
-        </span>
-      </div>
-
-      {/* Estado de los datos */}
-      <div id="events-data-status" role="status" aria-live="polite" className={TONO[mensaje.tono] || TONO.ambar}>
-        {mensaje.texto}
-      </div>
-
+      <div id="events-data-status" role="status" aria-live="polite" className={TONO[mensaje.tono] || TONO.ambar}>{mensaje.texto}</div>
       <FeaturedCarousel eventos={eventos} />
 
-      {/* Mapa interactivo React */}
-      <section id="mapa-eventos" className="space-y-4 scroll-mt-24" aria-labelledby="map-section-title">
-        <div className="flex flex-wrap justify-between items-end gap-3">
-          <div>
-            <span className="inline-flex px-3 py-1 mb-2 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">
-              📍 Mapa interactivo de Jujuy
-            </span>
-            <h3 id="map-section-title" className="text-2xl font-extrabold text-gray-900">
-              Explorá eventos en el mapa 3D
-            </h3>
-            <p className="mt-1 text-sm text-gray-600">
-              Elegí un evento desde el panel o tocá un marcador para conocer su ubicación. Los ejemplos sin fechas
-              confirmadas están identificados.
-            </p>
-          </div>
-          <a
-            className="text-sm font-semibold text-emerald-800 underline underline-offset-2"
-            href="https://www.openstreetmap.org/#map=14/-24.1858/-65.2995"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Abrir OpenStreetMap ↗
-          </a>
-        </div>
-
+      <section id="mapa-eventos" className="scroll-mt-24 space-y-4" aria-labelledby="map-section-title">
+        <div className="flex flex-wrap items-end justify-between gap-3"><div><span className="mb-2 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">📍 Mapa interactivo de Jujuy</span><h3 id="map-section-title" className="text-2xl font-extrabold text-gray-900">Explorá eventos en el mapa 3D</h3><p className="mt-1 text-sm text-gray-600">Elegí un evento desde el panel o tocá un marcador para conocer su ubicación.</p></div><a className="text-sm font-semibold text-emerald-800 underline underline-offset-2" href="https://www.openstreetmap.org/#map=14/-24.1858/-65.2995" target="_blank" rel="noopener noreferrer">Abrir OpenStreetMap ↗</a></div>
         <MapEvents eventos={visibles} onAsistir={setSeleccionado} />
       </section>
 
-      {/* Agenda */}
       <section aria-labelledby="agenda-title" className="space-y-4">
-        <h3 id="agenda-title" className="text-xl font-extrabold text-gray-900">
-          Agenda de actividades
-        </h3>
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-2">
-          <Search className="w-5 h-5 text-gray-400 self-center" aria-hidden="true" />
-          <input
-            type="text"
-            value={consulta}
-            onChange={(e) => setConsulta(e.target.value)}
-            placeholder="Buscar por evento, barrio, taller o rubro..."
-            className="w-full focus:outline-none text-sm"
-            aria-label="Buscar eventos"
-          />
-        </div>
-        <p className="text-xs text-gray-500">
-          Las sugerencias mostradas son consejos prácticos basados en la programación publicada, no predicciones de
-          Machine Learning.
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-3"><div><h3 id="agenda-title" className="text-xl font-extrabold text-gray-900">Agenda de actividades</h3><p className="mt-1 text-sm text-gray-600">Deslizá las tarjetas o usá las flechas para recorrer la programación.</p></div></div>
+        <div className="flex gap-2 rounded-xl border border-gray-100 bg-white p-4 shadow-sm"><Search className="h-5 w-5 self-center text-gray-400" aria-hidden="true" /><input type="text" value={consulta} onChange={(e) => setConsulta(e.target.value)} placeholder="Buscar por evento, barrio, taller o rubro..." className="w-full text-sm focus:outline-none" aria-label="Buscar eventos" /></div>
+        <p className="text-xs text-gray-500">Las sugerencias mostradas son consejos prácticos basados en la programación publicada, no predicciones de Machine Learning.</p>
         <EventList eventos={visibles} onAsistir={setSeleccionado} onUbicacion={irAlMapa} />
       </section>
 
