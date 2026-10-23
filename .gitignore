@@ -2,6 +2,6 @@ node_modules
 dist
 .env
 .env.local
-config.js
+/config.js
 *.local
 .DS_Store
