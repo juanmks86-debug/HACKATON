@@ -1,46 +1,69 @@
-# JujuyTech V8 — Login y perfiles
+# JujuyTech Web
 
-## Cambios
-- Pantalla de bienvenida de doble panel inspirada en la referencia visual.
-- Ingreso con email/contraseña, registro de cuenta, Google OAuth y recuperación de contraseña, todos conectados con **Supabase Auth**.
-- Inicio de sesión obligatorio antes de mostrar cualquier vista.
-- Tres portales de ruta hash: `#/comunidad`, `#/empresarios`, `#/municipio`.
-- Rol de cada usuario validado en `public.user_profiles` mediante Supabase RLS. No se confía en la opción seleccionada ni en metadatos editables para municipio.
-- Se conserva el mapa 3D V7.3, los eventos con imágenes, el calendario y el modal de recordatorio por email.
-- Los indicadores municipales **siguen siendo una demostración**; no están autorizados ni respaldados por API administrativa real.
+Aplicación oficial React + Vite de JujuyTech. La versión anterior basada en HTML quedó conservada en `legacy/frontend-html` como respaldo.
 
-## Preparación para funcionar
-1. Ya se aplicó en Supabase la migración `jujuytech_auth_portal_profiles`.
-2. En el dashboard Supabase, revisá **Authentication → Providers → Email** y **Google**; habilitá Google registrando Client ID y Client Secret propios en Google Cloud y proporcionando la URI de callback indicada por Supabase. No se pueden configurar esos datos desde el HTML.
-3. **Authentication → URL Configuration**: establecé el Site URL de la aplicación e incluí la URL de desarrollo (por ejemplo `http://localhost:5500/**`) en las redirect URLs autorizadas.
-4. Ejecutá: `cd frontend && python3 -m http.server 5500` y abrí `http://localhost:5500`.
-5. El archivo HTML standalone incluye imágenes, pero para OAuth Google **no** sirve abrirlo como `file://`. Debe alojarse mediante `http://localhost` o HTTPS.
-6. La clave pública publishable incluida en frontend es pública por diseño. Nunca pongas `service_role`, contraseña PostgreSQL o credenciales OAuth en el navegador.
+## Ejecutar
 
-## Roles
-- Cuenta nueva al registrarse como Comunidad: `community`.
-- Cuenta nueva al registrarse como Red Empresarial: `business`.
-- Cuenta municipal: **sólo un operador con permisos SQL administrativos** puede promover el perfil, después de que su usuario se registre:
+Desde la raíz del repositorio:
 
-```sql
-update public.user_profiles
-set role = 'municipality'
-where user_id = '<UUID_DE_UN_USUARIO_AUTORIZADO>';
+```bash
+cd apps/jujuytech-web
+npm install
+npm run dev
 ```
 
-Nunca se permite seleccionar Admin para autoconcederse acceso. Google retorna a la ruta solicitada; el perfil persistido tiene prioridad.
+La aplicación queda disponible en `http://localhost:5173`.
 
-## Limitación de seguridad relevante
-La separación de vistas en un HTML de navegador es una **barrera de navegación y presentación**, no autorización de datos confidenciales en el servidor. El dashboard actual muestra indicadores simulados. Antes de usar datos municipales privados habrá que implementar autenticación JWT y autorización de rol en la API .NET 10, además de control de acceso en base de datos.
+Otros comandos:
 
-## Emails de asistencia
-Las dos opciones anteriores se preservan: `.ics` con alarma -PT24H y formulario de email que requiere una API .NET 10 desplegada, el proceso de envío y credenciales Gmail protegidas. Este paso **no activa** el envío automático de correos.
+```bash
+npm test
+npm run build
+npm run preview
+```
 
+## Configuración
 
-## V8.1 — Registro con Google
+Copiá `.env.example` como `.env` cuando necesites conectar servicios:
 
-Ver [GOOGLE_OAUTH_CONFIGURACION.md](GOOGLE_OAUTH_CONFIGURACION.md). El flujo OAuth está preparado, pero activar Google requiere credenciales de Google Cloud y habilitar el proveedor en el panel de Supabase.
+```env
+VITE_API_BASE_URL=http://localhost:5000
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+```
 
+Las variables `VITE_*` son públicas y terminan en el bundle del navegador. Nunca agregues `service_role`, contraseñas, secretos SMTP ni claves privadas.
 
-## Integración Hacki (V8.3)
-Ver `INTEGRACION_HACKI.md` para funcionalidades, despliegue de IA y límites actuales.
+## Estructura
+
+```text
+src/
+├── App.jsx
+├── components/
+│   ├── auth/              login, registro, OAuth y recuperación
+│   ├── business/          portal Red Empresarial
+│   ├── community/         portal Comunidad
+│   ├── events/            tarjetas, mapa, carrusel y asistencia
+│   ├── hacki/             widget conversacional React
+│   ├── layout/            cabecera, pie y accesibilidad
+│   └── municipio/         portal municipal demostrativo
+├── data/                  agenda local y datos FAQ de Hacki
+├── hooks/                 autenticación, eventos y accesibilidad
+└── lib/                   API, Supabase, formatos y calendarios
+```
+
+## Migración completada
+
+- Autenticación Supabase por email, registro, recuperación y Google OAuth.
+- Portales por rol: Comunidad, Red Empresarial y Municipio.
+- Agenda local y carga desde `GET /api/events`.
+- Búsqueda, filtros, carrusel y tarjetas de eventos.
+- Mapa MapLibre con panel, marcadores y selección de eventos cuando existen coordenadas.
+- Modal de calendario `.ics`, Google Calendar y registro real mediante `POST /api/attendances` cuando la API está configurada.
+- Hacki convertido a componente React, con FAQ local y soporte opcional para `/api/chat`.
+- Accesibilidad, alto contraste y diseño responsive.
+- Tests de utilidades puras mediante `node --test`.
+
+## Límites actuales
+
+El dashboard municipal continúa siendo demostrativo. La autorización real de datos municipales debe implementarse en el backend mediante JWT, roles y políticas de base de datos. La API de Hacki debe validar la sesión y aplicar cuotas antes de publicarse.

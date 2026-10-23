@@ -1,0 +1,586 @@
+@import "tailwindcss";
+
+/* Tailwind v4: la paleta y la tipografía se declaran acá (antes era tailwind.config.js). */
+@theme {
+  --color-jujuy-red: #e53e3e;
+  --color-jujuy-orange: #dd6b20;
+  --color-jujuy-yellow: #d69e2e;
+  --color-jujuy-lime: #84cc16;
+  --color-jujuy-blue: #3182ce;
+  --color-jujuy-purple: #6b46c1;
+  --color-jujuy-dark: #1a202c;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ------------------------------------------------------------------ */
+/* Accesibilidad: alto contraste y carrusel (portado del HTML original) */
+/* ------------------------------------------------------------------ */
+.high-contrast {
+  filter: contrast(140%) brightness(95%);
+  background-color: #000000 !important;
+  color: #ffff00 !important;
+}
+.high-contrast header,
+.high-contrast footer,
+.high-contrast div {
+  background-color: #121212 !important;
+  border-color: #ffff00 !important;
+  color: #ffffff !important;
+}
+.high-contrast button {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+  font-weight: bold !important;
+}
+.carousel-item {
+  display: none;
+  transition: opacity 0.5s ease-in-out;
+}
+.carousel-item.active {
+  display: block;
+}
+
+/* ------------------------------------------------------------------ */
+/* Pantalla de acceso (dos paneles). Portado tal cual del HTML original */
+/* ------------------------------------------------------------------ */
+#jt-auth-screen {
+  min-height: 100vh;
+  display: flex;
+  background: white;
+  font-family: Inter, system-ui, sans-serif;
+  color: #111827;
+}
+.jt-auth-art {
+  width: 57%;
+  padding: 6vw 7vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  position: relative;
+  color: #fff;
+  background: linear-gradient(150deg, #4649f6, #2428aa 64%, #121463);
+}
+.jt-auth-art::after {
+  content: "";
+  position: absolute;
+  inset: 20% -14% -30% 0;
+  border: 1px solid #ffffff21;
+  transform: rotate(-24deg);
+  border-radius: 70px;
+  box-shadow: 0 0 0 75px #ffffff08, 0 0 0 148px #ffffff06, 0 0 0 220px #ffffff05;
+  pointer-events: none;
+}
+.jt-auth-art > * {
+  position: relative;
+  z-index: 1;
+}
+.jt-brand-symbol {
+  font-size: 78px;
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+}
+.jt-auth-art h1 {
+  font-size: clamp(34px, 4vw, 62px);
+  line-height: 1.1;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+  margin-bottom: 28px;
+}
+.jt-auth-art p {
+  font-size: clamp(15px, 1.4vw, 20px);
+  max-width: 520px;
+  line-height: 1.6;
+  color: #e3e6ff;
+}
+.jt-auth-panel {
+  width: 43%;
+  padding: 46px 7vw 45px 5.2vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+.jt-auth-inner {
+  width: 100%;
+  max-width: 420px;
+}
+.jt-auth-wordmark {
+  font-size: 26px;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+  margin-bottom: 54px;
+}
+.jt-auth-inner h2 {
+  font-size: clamp(25px, 2.4vw, 35px);
+  line-height: 1.2;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+  margin-bottom: 8px;
+}
+.jt-auth-muted {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin-bottom: 22px;
+}
+.jt-role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0 24px;
+}
+.jt-role-option {
+  min-height: 91px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 5px;
+  color: #4b5563;
+  background: white;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.jt-role-option[aria-pressed="true"] {
+  color: #3730a3;
+  border-color: #5146f6;
+  background: #f1f0ff;
+}
+.jt-role-option:hover {
+  border-color: #a5b4fc;
+}
+.jt-role-option b {
+  font-size: 24px;
+}
+.jt-field {
+  display: block;
+  width: 100%;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 13px 14px;
+  outline: none;
+  margin: 10px 0;
+  background: #fff;
+  color: #111827;
+}
+.jt-field:focus {
+  border-color: #5146f6;
+  box-shadow: 0 0 0 3px #5146f61c;
+}
+.jt-auth-button {
+  display: block;
+  width: 100%;
+  background: #141414;
+  color: white;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 750;
+  padding: 13px 10px;
+  margin: 15px 0 10px;
+  cursor: pointer;
+}
+.jt-auth-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.jt-google-button {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 10px;
+  padding: 11px;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.jt-google-g {
+  font-size: 21px;
+  font-weight: 850;
+  background: conic-gradient(#4285f4 0 90deg, #34a853 90deg 180deg, #fbbc05 180deg 240deg, #ea4335 240deg 360deg);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+.jt-auth-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 13px 0;
+}
+.jt-auth-links button {
+  font-size: 12px;
+  color: #3730a3;
+  text-decoration: underline;
+  font-weight: 650;
+}
+.jt-auth-feedback {
+  min-height: 30px;
+  padding: 8px 0;
+  font-size: 12px;
+  color: #9a3412;
+  line-height: 1.45;
+}
+.jt-auth-feedback[data-status="ok"] {
+  color: #047857;
+}
+.jt-profilebar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.jt-profilebar button {
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  padding: 7px 11px;
+  font-weight: 700;
+}
+@media (max-width: 850px) {
+  #jt-auth-screen {
+    flex-direction: column;
+  }
+  .jt-auth-art,
+  .jt-auth-panel {
+    width: 100%;
+  }
+  .jt-auth-art {
+    min-height: 210px;
+    padding: 26px;
+  }
+  .jt-auth-art h1 {
+    font-size: 35px;
+    margin: 12px 0;
+  }
+  .jt-auth-art p {
+    font-size: 13px;
+  }
+  .jt-auth-art .jt-brand-symbol {
+    font-size: 36px;
+  }
+  .jt-auth-art footer {
+    display: none;
+  }
+  .jt-auth-panel {
+    padding: 35px 24px;
+  }
+  .jt-auth-wordmark {
+    margin-bottom: 22px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Mapa 3D (se usa en la Fase 2; el CSS ya queda listo)                */
+/* ------------------------------------------------------------------ */
+.jt-map-shell {
+  position: relative;
+  height: 740px;
+  min-height: 580px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #020617;
+  border: 1px solid #334155;
+  box-shadow: 0 22px 50px #0f172a38;
+  isolation: isolate;
+}
+#event-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.jt-map-sidebar {
+  position: absolute;
+  z-index: 11;
+  top: 16px;
+  left: 16px;
+  bottom: 16px;
+  width: 365px;
+  max-width: calc(100% - 32px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 17px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.93);
+  border: 1px solid #334155;
+  box-shadow: 0 16px 40px #0008;
+  backdrop-filter: blur(16px);
+}
+.jt-map-sidebar[hidden] {
+  display: none;
+}
+.jt-map-filters {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: 3px 0 5px;
+}
+.jt-map-filter {
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+}
+.jt-map-filter:hover,
+.jt-map-filter:focus-visible {
+  background: #334155;
+  outline-color: #6ee7b7;
+}
+.jt-map-filter[aria-pressed="true"] {
+  background: #10b981;
+  color: #042f2e;
+}
+.jt-map-card {
+  width: 100%;
+  border: 1px solid #334155;
+  background: rgba(51, 65, 85, 0.45);
+  border-radius: 12px;
+  display: flex;
+  gap: 10px;
+  padding: 9px;
+  text-align: left;
+  color: #fff;
+  transition: background 0.15s, border-color 0.15s;
+}
+.jt-map-card:hover,
+.jt-map-card:focus-visible,
+.jt-map-card[aria-pressed="true"] {
+  background: rgba(15, 118, 110, 0.34);
+  border-color: #34d399;
+  outline: none;
+}
+.jt-map-image {
+  width: 92px;
+  height: 82px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: #334155;
+}
+.jt-map-card-content {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.jt-map-card-content strong {
+  font-size: 12px;
+  line-height: 1.28;
+}
+.jt-map-card-content small {
+  font-size: 10px;
+  line-height: 1.38;
+  color: #cbd5e1;
+}
+.jt-map-category {
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.jt-map-demo {
+  font-size: 9px;
+  color: #fde68a;
+  font-weight: 800;
+  border-radius: 5px;
+  background: #78350f55;
+  padding: 2px 5px;
+  display: inline-flex;
+  width: max-content;
+}
+.jt-map-toolbar {
+  position: absolute;
+  z-index: 12;
+  right: 15px;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 9px;
+  max-width: 50%;
+}
+.jt-map-tool {
+  background: rgba(15, 23, 42, 0.93);
+  color: #fff;
+  border: 1px solid #475569;
+  border-radius: 12px;
+  padding: 10px 13px;
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: 0 8px 24px #0008;
+  backdrop-filter: blur(12px);
+}
+.jt-map-tool:hover,
+.jt-map-tool:focus-visible {
+  border-color: #34d399;
+  background: #1e293b;
+  outline-color: #34d399;
+}
+.jt-map-pin {
+  --jt-pin: #10b981;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--jt-pin);
+  background: #0f172a;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 7px color-mix(in srgb, var(--jt-pin) 24%, transparent), 0 4px 18px #0009;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.jt-map-pin:hover,
+.jt-map-pin[aria-current="true"] {
+  transform: scale(1.24);
+}
+.jt-map-pin-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--jt-pin);
+}
+.maplibregl-popup-content {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.maplibregl-popup-close-button {
+  color: white !important;
+  font-size: 19px;
+  right: 8px;
+  top: 7px;
+  z-index: 3;
+}
+.jt-map-popup {
+  background: rgba(15, 23, 42, 0.97);
+  color: white;
+  border: 1px solid #475569;
+  border-radius: 14px;
+  padding: 14px;
+  width: 270px;
+  max-width: 80vw;
+  box-shadow: 0 15px 32px #0009;
+  font: 12px system-ui;
+}
+.jt-map-popup img {
+  width: 100%;
+  height: 125px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: #334155;
+}
+.jt-map-popup-title {
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.25;
+  margin: 6px 0;
+}
+.jt-map-popup p {
+  color: #cbd5e1;
+  font-size: 11px;
+  margin: 5px 0;
+  line-height: 1.4;
+}
+.jt-map-popup-button {
+  display: block;
+  border: 0;
+  background: linear-gradient(90deg, #34d399, #14b8a6);
+  color: #052e25;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 900;
+  width: 100%;
+  margin-top: 10px;
+  text-align: center;
+}
+.jt-map-status {
+  position: absolute;
+  z-index: 10;
+  right: 13px;
+  bottom: 12px;
+  max-width: 380px;
+  background: rgba(15, 23, 42, 0.86);
+  border: 1px solid #475569;
+  border-radius: 9px;
+  color: #f8fafc;
+  padding: 8px 12px;
+  font-size: 11px;
+  pointer-events: none;
+}
+@media (max-width: 900px) {
+  .jt-map-shell {
+    height: 755px;
+  }
+  .jt-map-sidebar {
+    top: 12px;
+    left: 12px;
+    bottom: auto;
+    width: 360px;
+    max-height: 335px;
+    max-width: calc(100% - 24px);
+  }
+  .jt-map-toolbar {
+    top: auto;
+    bottom: 15px;
+    right: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-width: calc(100% - 24px);
+    gap: 5px;
+  }
+  .jt-map-tool {
+    font-size: 10px;
+    padding: 9px;
+  }
+  .jt-map-status {
+    left: 12px;
+    right: auto;
+    bottom: 68px;
+    max-width: calc(100% - 24px);
+  }
+}
+@media (max-width: 520px) {
+  .jt-map-shell {
+    height: 730px;
+  }
+  .jt-map-sidebar {
+    max-height: 330px;
+  }
+  .jt-map-image {
+    width: 72px;
+    height: 74px;
+  }
+  .jt-map-toolbar {
+    bottom: 10px;
+  }
+  .jt-map-status {
+    bottom: 82px;
+  }
+  .jt-map-popup {
+    width: 245px;
+  }
+  .jt-map-tool {
+    font-size: 9px;
+    padding: 8px;
+  }
+}
