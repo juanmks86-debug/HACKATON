@@ -780,9 +780,12 @@ renderEvents();renderFeatured();loadPublishedEvents();if(window.lucide)lucide.cr
     }catch(_){/* estilos sin edificio 3D conservan la cámara inclinada */}
   }
   function showFallback(message){const el=$('map-fallback');el?.classList.remove('hidden');const p=$('map-fallback-info');if(p)p.textContent=message;putStatus(message);}
+  const webglOK=()=>{try{const c=document.createElement('canvas');return !!(c.getContext('webgl2')||c.getContext('webgl'));}catch(_){return false;}};
   function initMap(){
     if(map)return;
-    if(!window.maplibregl||!maplibregl.supported()){showFallback('MapLibre no está disponible. Revisá conexión a Internet o soporte WebGL.');return;}
+    // Si el portal está oculto el contenedor mide 0x0: se espera a que sea visible (ver ResizeObserver).
+    if(!canvas.clientWidth||!canvas.clientHeight)return;
+    if(!window.maplibregl||!webglOK()){showFallback('MapLibre no está disponible. Revisá conexión a Internet o soporte WebGL.');return;}
     try{
       map=new maplibregl.Map({container:canvas,style:'https://tiles.openfreemap.org/styles/dark',center:city,zoom:15.3,pitch:58,bearing:-17.6,antialias:true});
       map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
@@ -803,6 +806,7 @@ renderEvents();renderFeatured();loadPublishedEvents();if(window.lucide)lucide.cr
   window.jujuyMapSelect=e=>select(e.id);
   window.jujuyMapRefresh=refresh;
   refresh((typeof events!=='undefined'&&Array.isArray(events))?events:[]);
+  if('ResizeObserver' in window){new ResizeObserver(()=>{if(canvas.clientWidth>0&&canvas.clientHeight>0){if(!map)initMap();else map.resize();}}).observe(canvas);}
   initMap();
   window.addEventListener('resize',()=>map?.resize());
 })();
