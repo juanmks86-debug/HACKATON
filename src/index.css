@@ -584,3 +584,79 @@
     padding: 8px;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Modo nocturno armonioso: conserva imágenes y contraste del mapa      */
+/* ------------------------------------------------------------------ */
+html.night-mode,
+html.night-mode body {
+  background: #080f1d;
+  color: #e5e7eb;
+}
+
+html.night-mode #body-app {
+  background: #0b1220;
+  color: #e5e7eb;
+}
+
+html.night-mode main .bg-white,
+html.night-mode main .bg-gray-50,
+html.night-mode main .bg-slate-50 {
+  background-color: #111c2e !important;
+  border-color: #263750 !important;
+  color: #e5e7eb !important;
+}
+
+html.night-mode main .text-gray-900,
+html.night-mode main .text-gray-950,
+html.night-mode main .text-gray-800,
+html.night-mode main .text-gray-700,
+html.night-mode main .text-gray-600 {
+  color: #dbeafe !important;
+}
+
+html.night-mode main .text-gray-500 {
+  color: #a5b4c8 !important;
+}
+
+html.night-mode main input {
+  background: #0f1a2b;
+  color: #f8fafc;
+  border-color: #38506f;
+}
+
+html.night-mode .jt-map-shell {
+  border-color: #425a7b;
+  box-shadow: 0 22px 50px #0009;
+}
+
+html.night-mode .jt-map-shell #event-map {
+  filter: brightness(0.72) saturate(1.18) contrast(1.08);
+}
+
+html.night-mode .jt-map-sidebar {
+  background: rgba(6, 15, 30, 0.94);
+  border-color: #425a7b;
+}
+
+html.night-mode .jt-map-card {
+  background: rgba(24, 43, 70, 0.72);
+  border-color: #425a7b;
+}
+
+html.night-mode .jt-map-card:hover,
+html.night-mode .jt-map-card:focus-visible,
+html.night-mode .jt-map-card[aria-pressed="true"] {
+  background: rgba(14, 116, 144, 0.45);
+  border-color: #67e8f9;
+}
+
+html.night-mode .jt-map-status {
+  background: rgba(6, 15, 30, 0.9);
+  border-color: #425a7b;
+}
+
+html.night-mode .jt-map-popup {
+  background: rgba(6, 15, 30, 0.98);
+  border-color: #425a7b;
+}

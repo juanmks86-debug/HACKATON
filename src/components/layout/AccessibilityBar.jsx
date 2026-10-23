@@ -1,4 +1,4 @@
-import { Accessibility, Eye, Volume2 } from "lucide-react";
+import { Accessibility, Eye, Volume2, Moon, Sun } from "lucide-react";
 
 /** Barra de accesibilidad: lectura por voz, tamaño de letra, alto contraste e idioma. */
 export default function AccessibilityBar({ a11y }) {
@@ -39,6 +39,16 @@ export default function AccessibilityBar({ a11y }) {
           className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold px-2 py-1 rounded flex items-center gap-1"
         >
           <Eye className="w-3.5 h-3.5" aria-hidden="true" /> Alto Contraste
+        </button>
+
+        <button
+          type="button"
+          onClick={a11y.alternarNocturno}
+          aria-pressed={a11y.nocturno}
+          className="bg-slate-700 hover:bg-slate-600 text-white font-semibold px-2 py-1 rounded flex items-center gap-1"
+        >
+          {a11y.nocturno ? <Sun className="w-3.5 h-3.5" aria-hidden="true" /> : <Moon className="w-3.5 h-3.5" aria-hidden="true" />}
+          <span>{a11y.nocturno ? "Modo claro" : "Modo nocturno"}</span>
         </button>
 
         <select

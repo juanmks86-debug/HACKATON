@@ -60,7 +60,7 @@ export default function App() {
         onIrArriba={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       />
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {vista === "community" && <ComunidadView eventos={eventos} mensaje={mensaje} />}
+        {vista === "community" && <ComunidadView eventos={eventos} mensaje={mensaje} modoNocturno={a11y.nocturno} />}
         {vista === "business" && <EmpresarialView />}
         {vista === "municipio" && <MunicipioView eventos={eventos} />}
       </main>

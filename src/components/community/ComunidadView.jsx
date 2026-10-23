@@ -15,7 +15,7 @@ const TONO = {
 
 const CHIP = "bg-slate-950/30 hover:bg-slate-950/50 backdrop-blur-md px-3 py-1.5 rounded-full text-xs md:text-sm font-medium border border-white/30 text-white";
 
-export default function ComunidadView({ eventos, mensaje }) {
+export default function ComunidadView({ eventos, mensaje, modoNocturno = false }) {
   const [periodo, setPeriodo] = useState("all");
   const [consulta, setConsulta] = useState("");
   const [seleccionado, setSeleccionado] = useState(null);
@@ -25,7 +25,7 @@ export default function ComunidadView({ eventos, mensaje }) {
   return (
     <section id="top" className="space-y-8">
       <section className="relative isolate overflow-hidden rounded-3xl bg-slate-900 shadow-xl" aria-labelledby="hero-title">
-        <img src="/assets/paseo-de-las-luces.webp" alt="Paisaje cultural de Jujuy" className="absolute inset-0 -z-20 h-full w-full object-cover" />
+        <img src="/assets/hero-hornocal.jfif" alt="Serranía del Hornocal, Jujuy" className="absolute inset-0 -z-20 h-full w-full object-cover" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-orange-800/95 via-orange-700/75 to-red-700/35" />
         <div className="relative max-w-3xl p-7 text-white md:p-12">
           <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-orange-100">JujuyTech · Cultura y comunidad</p>
@@ -49,7 +49,7 @@ export default function ComunidadView({ eventos, mensaje }) {
 
       <section id="mapa-eventos" className="scroll-mt-24 space-y-4" aria-labelledby="map-section-title">
         <div className="flex flex-wrap items-end justify-between gap-3"><div><span className="mb-2 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">📍 Mapa interactivo de Jujuy</span><h3 id="map-section-title" className="text-2xl font-extrabold text-gray-900">Explorá eventos en el mapa 3D</h3><p className="mt-1 text-sm text-gray-600">Elegí un evento desde el panel o tocá un marcador para conocer su ubicación.</p></div><a className="text-sm font-semibold text-emerald-800 underline underline-offset-2" href="https://www.openstreetmap.org/#map=14/-24.1858/-65.2995" target="_blank" rel="noopener noreferrer">Abrir OpenStreetMap ↗</a></div>
-        <MapEvents eventos={visibles} onAsistir={setSeleccionado} />
+        <MapEvents eventos={visibles} onAsistir={setSeleccionado} modoNocturno={modoNocturno} />
       </section>
 
       <section aria-labelledby="agenda-title" className="space-y-4">

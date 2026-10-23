@@ -10,6 +10,13 @@ const MENSAJE_BIENVENIDA =
 export function useA11y() {
   const [desplazamiento, setDesplazamiento] = useState(0);
   const [contraste, setContraste] = useState(false);
+  const [nocturno, setNocturno] = useState(() => {
+    try {
+      return window.localStorage.getItem("jt_night_mode") === "true";
+    } catch {
+      return false;
+    }
+  });
   const [voz, setVoz] = useState(false);
   const [idioma, setIdioma] = useState("es");
 
@@ -17,12 +24,22 @@ export function useA11y() {
     document.documentElement.style.fontSize = 16 + desplazamiento * 2 + "px";
   }, [desplazamiento]);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("night-mode", nocturno);
+    try {
+      window.localStorage.setItem("jt_night_mode", String(nocturno));
+    } catch {
+      // El tema sigue funcionando aunque el navegador bloquee localStorage.
+    }
+  }, [nocturno]);
+
   /** delta: -1 achica, 0 vuelve al tamaño normal, 1 agranda. Rango: -2 a 4. */
   const cambiarTamano = useCallback((delta) => {
     setDesplazamiento((actual) => (delta === 0 ? 0 : Math.max(-2, Math.min(4, actual + delta))));
   }, []);
 
   const alternarContraste = useCallback(() => setContraste((valor) => !valor), []);
+  const alternarNocturno = useCallback(() => setNocturno((valor) => !valor), []);
 
   const alternarVoz = useCallback(() => {
     const nuevo = !voz;
@@ -46,5 +63,5 @@ export function useA11y() {
     setIdioma(nuevo);
   }, []);
 
-  return { desplazamiento, cambiarTamano, contraste, alternarContraste, voz, alternarVoz, idioma, cambiarIdioma };
+  return { desplazamiento, cambiarTamano, contraste, alternarContraste, nocturno, alternarNocturno, voz, alternarVoz, idioma, cambiarIdioma };
 }
