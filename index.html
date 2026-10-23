@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1265,6 +1264,57 @@ function enterAsVisitor(role = 'community'){
   };
   window.leaveDashboard=()=>{if(visitorRole){showLogin();return;}if(currentProfile?.role==='municipality')setViewAuthorized('municipality');};
   start();
+})();
+</script>
+<script>
+(function () {
+  var INTERVALO = 3500; // milisegundos entre cada avance
+  var reducir = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // El contenedor es el padre de las tarjetas <article> que están después del buscador
+  function buscarContenedor() {
+    var input = document.querySelector('input[placeholder^="Buscar por evento"]');
+    if (!input) return null;
+    var arts = document.querySelectorAll('article');
+    for (var i = 0; i < arts.length; i++) {
+      var a = arts[i];
+      if ((input.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING) && a.querySelector('img')) {
+        return a.parentElement;
+      }
+    }
+    return null;
+  }
+
+  function iniciar(c) {
+    if (c.dataset.carrusel) return;
+    c.dataset.carrusel = '1';
+    c.classList.add('jt-carrusel');
+    var pausado = false;
+
+    c.addEventListener('mouseenter', function () { pausado = true; });
+    c.addEventListener('mouseleave', function () { pausado = false; });
+    c.addEventListener('touchstart', function () { pausado = true; }, { passive: true });
+    c.addEventListener('touchend', function () {
+      setTimeout(function () { pausado = false; }, 4000);
+    });
+
+    setInterval(function () {
+      if (pausado || reducir || c.children.length < 2) return;
+      var gap = parseFloat(getComputedStyle(c).columnGap) || 16;
+      var paso = c.firstElementChild.getBoundingClientRect().width + gap;
+      var alFinal = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4;
+      c.scrollTo({ left: alFinal ? 0 : c.scrollLeft + paso, behavior: 'smooth' });
+    }, INTERVALO);
+  }
+
+  function buscar() {
+    var c = buscarContenedor();
+    if (c) iniciar(c);
+  }
+
+  // Las tarjetas se cargan después, así que esperamos a que existan
+  new MutationObserver(buscar).observe(document.body, { childList: true, subtree: true });
+  buscar();
 })();
 </script>
 </body></html>
