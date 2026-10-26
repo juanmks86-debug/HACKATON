@@ -1,67 +1,49 @@
-import { useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, CalendarDays, ChevronDown, Clock3, MapPin, Ticket } from "lucide-react";
-import { estadoDe, formateadorDia, formateadorHora } from "../../lib/format.js";
+import { useMemo, useState } from "react";
+import EventCard from "./EventCard.jsx";
+import { estadoDe } from "../../lib/format.js";
 
-const INTERVALO_MS = 4500;
+const FILTROS = ["Todos", "Hoy", "Esta semana", "Gratis", "Arte", "Música", "Taller"];
 
-function AgendaTickerCard({ evento, onAbrir }) {
+function coincideFiltro(evento, filtro) {
+  if (filtro === "Todos") return true;
   const estado = estadoDe(evento);
-  const ingreso = evento.admissionInfo || "Condiciones por confirmar";
-  const lugarCorto = evento.place?.split(",").slice(0, 2).join(" · ") || "Ubicación por confirmar";
-
-  return <article className="group relative flex h-36 w-full cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg focus-within:ring-2 focus-within:ring-orange-500 md:h-40" onClick={() => onAbrir(evento)}>
-    <div className="relative h-full w-28 shrink-0 overflow-hidden bg-slate-800 md:w-32">
-      {evento.image ? <img src={evento.image} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /> : <div className="h-full w-full bg-gradient-to-br from-orange-400 to-violet-800" />}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      <span className={`absolute left-2 top-2 rounded-full px-2 py-1 text-[10px] font-extrabold text-white shadow ${estado === "Finalizado" ? "bg-slate-700/90" : "bg-orange-600/90"}`}>{estado === "Hoy / próximo" ? "Hoy" : estado}</span>
-    </div>
-    <div className="min-w-0 flex-1 p-3 md:p-4">
-      <div className="flex items-start justify-between gap-2"><span className="truncate text-[10px] font-extrabold uppercase tracking-wide text-orange-700">{evento.category || "Cultura"}</span><button type="button" onClick={(e) => { e.stopPropagation(); onAbrir(evento); }} className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-900 px-2 py-1 text-[10px] font-bold text-white transition hover:bg-orange-600">Ver detalles <ArrowUpRight className="h-3 w-3" /></button></div>
-      <h4 className="mt-1 line-clamp-1 text-sm font-extrabold leading-tight text-slate-900 md:text-base">{evento.title}</h4>
-      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold text-slate-600"><span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 text-orange-600" />{formateadorDia.format(new Date(evento.startAt))}</span><span className="inline-flex items-center gap-1"><Clock3 className="h-3.5 w-3.5 text-blue-700" />{formateadorHora.format(new Date(evento.startAt))} hs</span></div>
-      <p className="mt-1 line-clamp-1 text-[11px] text-slate-600"><MapPin className="mr-1 inline h-3.5 w-3.5 text-rose-600" />{lugarCorto}</p>
-      <p className="mt-1 line-clamp-1 text-[10px] font-semibold text-amber-800"><Ticket className="mr-1 inline h-3.5 w-3.5" />{ingreso}</p>
-    </div>
-  </article>;
+  const texto = [evento.title, evento.category, evento.description, evento.admissionInfo].join(" ").toLocaleLowerCase("es");
+  if (filtro === "Hoy") return estado === "Hoy / próximo";
+  if (filtro === "Esta semana") {
+    const fecha = new Date(evento.startAt).getTime();
+    const ahora = Date.now();
+    return fecha >= ahora - 24 * 60 * 60 * 1000 && fecha <= ahora + 7 * 24 * 60 * 60 * 1000;
+  }
+  if (filtro === "Gratis") return /gratis|gratuito|gratuita/.test(texto);
+  if (filtro === "Arte") return /arte|artes|creativ/.test(texto);
+  if (filtro === "Música") return /música|musica|sinfon|canto|copla/.test(texto);
+  if (filtro === "Taller") return /taller/.test(texto);
+  return true;
 }
 
-/** Marquesina vertical: dos tarjetas visibles, avance ascendente y bucle infinito. */
-export default function EventList({ eventos, onAsistir }) {
-  const [indice, setIndice] = useState(0);
-  const [pausado, setPausado] = useState(false);
-  const [transicion, setTransicion] = useState(true);
-  const elementos = useMemo(() => [...eventos, ...eventos], [eventos]);
+function ordenar(a, b) {
+  const estadoA = estadoDe(a);
+  const estadoB = estadoDe(b);
+  const peso = { "Hoy / próximo": 0, Próximo: 1, Finalizado: 2 };
+  return (peso[estadoA] - peso[estadoB]) || (new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+}
 
-  useEffect(() => {
-    setIndice(0);
-    setTransicion(false);
-    requestAnimationFrame(() => setTransicion(true));
-  }, [eventos]);
-
-  useEffect(() => {
-    if (eventos.length < 2 || pausado) return undefined;
-    const timer = window.setInterval(() => setIndice((actual) => actual + 1), INTERVALO_MS);
-    return () => window.clearInterval(timer);
-  }, [eventos.length, pausado, indice]);
-
-  const alTerminar = () => {
-    if (indice < eventos.length) return;
-    setTransicion(false);
-    setIndice(0);
-    requestAnimationFrame(() => setTransicion(true));
-  };
+/** Agenda responsive: filtros funcionales y grilla de tarjetas horizontales. */
+export default function EventList({ eventos, onAsistir, onUbicacion }) {
+  const [filtro, setFiltro] = useState("Todos");
+  const filtrados = useMemo(() => eventos.filter((evento) => coincideFiltro(evento, filtro)).sort(ordenar), [eventos, filtro]);
+  const activos = filtrados.filter((evento) => estadoDe(evento) !== "Finalizado");
+  const finalizados = filtrados.filter((evento) => estadoDe(evento) === "Finalizado");
 
   if (!eventos.length) return <p className="text-sm text-gray-600">No hay eventos publicados que coincidan con los filtros.</p>;
 
-  return <div className="space-y-3" onMouseEnter={() => setPausado(true)} onMouseLeave={() => setPausado(false)} onFocus={() => setPausado(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPausado(false); }}>
-    <div className="agenda-ticker relative mx-auto max-w-4xl overflow-hidden rounded-2xl bg-slate-100/60 p-2">
-      <div className={`space-y-4 ${transicion ? "transition-transform duration-700 ease-in-out" : "transition-none"}`} style={{ transform: `translate3d(0, calc(-1 * ${indice} * var(--agenda-step)), 0)` }} onTransitionEnd={alTerminar}>
-        {elementos.map((evento, posicion) => <AgendaTickerCard key={`${evento.id ?? evento.title}-${posicion}`} evento={evento} onAbrir={onAsistir} />)}
-      </div>
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-5 bg-gradient-to-b from-slate-100/90 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t from-slate-100/90 to-transparent" />
+  return <div className="agenda-content">
+    <div className="agenda-filters" role="group" aria-label="Filtros rápidos de agenda">
+      <div className="agenda-chips">{FILTROS.map((opcion) => <button key={opcion} type="button" className={`agenda-chip ${filtro === opcion ? "agenda-chip--active" : ""}`} aria-pressed={filtro === opcion} onClick={() => setFiltro(opcion)}>{opcion}</button>)}</div>
+      <span className="agenda-count" aria-live="polite">{filtrados.length} {filtrados.length === 1 ? "actividad" : "actividades"}</span>
     </div>
-    <div className="flex items-center justify-center gap-2 text-xs text-gray-500"><ChevronDown className={`h-4 w-4 ${pausado ? "text-orange-500" : "animate-bounce"}`} /><span>{pausado ? "Pausado para leer" : "Sube automáticamente cada 4,5 segundos"}</span><ChevronDown className={`h-4 w-4 ${pausado ? "text-orange-500" : "animate-bounce"}`} /></div>
-    <p className="text-center text-xs text-gray-500">Se muestran exactamente 2 actividades. Hacé clic en una tarjeta para ver todos sus detalles.</p>
+
+    {activos.length > 0 ? <div className="agenda-grid">{activos.map((evento) => <EventCard key={evento.id ?? evento.title} evento={evento} onAsistir={onAsistir} onUbicacion={onUbicacion} />)}</div> : <p className="agenda-empty">No hay actividades activas para este filtro.</p>}
+    {finalizados.length > 0 && <section className="agenda-finished" aria-labelledby="finalizados-title"><div className="agenda-finished__heading"><span id="finalizados-title">Finalizados</span><span>{finalizados.length}</span></div><div className="agenda-grid">{finalizados.map((evento) => <EventCard key={evento.id ?? evento.title} evento={evento} onAsistir={onAsistir} onUbicacion={onUbicacion} />)}</div></section>}
   </div>;
 }

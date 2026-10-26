@@ -52,10 +52,10 @@ export default function ComunidadView({ eventos, mensaje, modoNocturno = false }
         <MapEvents eventos={visibles} onAsistir={setSeleccionado} modoNocturno={modoNocturno} />
       </section>
 
-      <section aria-labelledby="agenda-title" className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3"><div><h3 id="agenda-title" className="text-xl font-extrabold text-gray-900">Agenda de actividades</h3><p className="mt-1 text-sm text-gray-600">Deslizá las tarjetas o usá las flechas para recorrer la programación.</p></div></div>
-        <div className="flex gap-2 rounded-xl border border-gray-100 bg-white p-4 shadow-sm"><Search className="h-5 w-5 self-center text-gray-400" aria-hidden="true" /><input type="text" value={consulta} onChange={(e) => setConsulta(e.target.value)} placeholder="Buscar por evento, barrio, taller o rubro..." className="w-full text-sm focus:outline-none" aria-label="Buscar eventos" /></div>
-        <p className="text-xs text-gray-500">Las sugerencias mostradas son consejos prácticos basados en la programación publicada, no predicciones de Machine Learning.</p>
+      <section aria-labelledby="agenda-title" className="agenda-container space-y-5">
+        <div><h3 id="agenda-title" className="text-2xl font-extrabold text-gray-900 md:text-3xl">Agenda de actividades</h3><p className="mt-2 text-sm text-gray-600">Encontrá una actividad por nombre, lugar, categoría o tipo de entrada.</p></div>
+        <label className="agenda-search"><Search className="agenda-search__icon" aria-hidden="true" /><span className="sr-only">Buscar eventos</span><input type="search" value={consulta} onChange={(e) => setConsulta(e.target.value)} placeholder="Buscar por evento, barrio, taller o rubro..." aria-label="Buscar eventos" /></label>
+        <p className="text-sm text-gray-600">Las sugerencias mostradas son consejos prácticos basados en la programación publicada, no predicciones de Machine Learning.</p>
         <EventList eventos={visibles} onAsistir={setSeleccionado} onUbicacion={irAlMapa} />
       </section>
 
