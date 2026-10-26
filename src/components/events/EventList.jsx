@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import EventCard from "./EventCard.jsx";
 import { estadoDe } from "../../lib/format.js";
 
@@ -31,6 +31,13 @@ function ordenar(a, b) {
 /** Agenda responsive: filtros funcionales y grilla de tarjetas horizontales. */
 export default function EventList({ eventos, onAsistir, onUbicacion }) {
   const [filtro, setFiltro] = useState("Todos");
+  useEffect(() => {
+    const cambiarDesdeFooter = (event) => {
+      if (FILTROS.includes(event.detail)) setFiltro(event.detail);
+    };
+    window.addEventListener("agenda-filter", cambiarDesdeFooter);
+    return () => window.removeEventListener("agenda-filter", cambiarDesdeFooter);
+  }, []);
   const filtrados = useMemo(() => eventos.filter((evento) => coincideFiltro(evento, filtro)).sort(ordenar), [eventos, filtro]);
   const activos = filtrados.filter((evento) => estadoDe(evento) !== "Finalizado");
   const finalizados = filtrados.filter((evento) => estadoDe(evento) === "Finalizado");

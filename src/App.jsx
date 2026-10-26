@@ -3,7 +3,6 @@ import { AUTH_PATH, ROLE_PATHS } from "./config.js";
 import { useA11y } from "./hooks/useA11y.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useEvents } from "./hooks/useEvents.js";
-import AccessibilityBar from "./components/layout/AccessibilityBar.jsx";
 import Header from "./components/layout/Header.jsx";
 import Footer from "./components/layout/Footer.jsx";
 import AuthScreen from "./components/auth/AuthScreen.jsx";
@@ -52,12 +51,12 @@ export default function App() {
 
   return (
     <div id="body-app" className={`min-h-screen flex flex-col ${a11y.contraste ? "high-contrast" : ""}`}>
-      <AccessibilityBar a11y={a11y} />
       <Header
         auth={auth}
         email={email}
         onPedirLogin={pedirLogin}
         onIrArriba={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        a11y={a11y}
       />
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {vista === "community" && <ComunidadView eventos={eventos} mensaje={mensaje} modoNocturno={a11y.nocturno} />}

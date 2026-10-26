@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { API_BASE_URL } from "../../config.js";
 import faq from "../../data/hacki/faq.json";
 
@@ -9,6 +9,12 @@ export default function HackiWidget() {
   const [consulta, setConsulta] = useState("");
   const [mensajes, setMensajes] = useState([]);
   const sugerencias = useMemo(() => faq.slice(0, 4), []);
+
+  useEffect(() => {
+    const abrirDesdeFooter = () => setAbierto(true);
+    window.addEventListener("hacki-open", abrirDesdeFooter);
+    return () => window.removeEventListener("hacki-open", abrirDesdeFooter);
+  }, []);
 
   const responder = async (texto) => {
     const pregunta = String(texto).trim();

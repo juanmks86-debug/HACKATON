@@ -1,41 +1,21 @@
+import { Globe2, Menu, X } from "lucide-react";
+import { useState } from "react";
 import { ROLE_LABELS } from "../../config.js";
+import AccessibilityBar from "./AccessibilityBar.jsx";
 
-/** Encabezado con marca, portal activo y las acciones de sesión. */
-export default function Header({ auth, email, onPedirLogin, onIrArriba }) {
+export default function Header({ auth, email, onPedirLogin, onIrArriba, a11y }) {
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const { esInvitado } = auth;
-  return (
-    <header className="bg-white shadow-md sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
-        <button type="button" className="flex items-center space-x-3 text-left" onClick={onIrArriba}>
-          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-red-500 via-yellow-500 to-green-500 flex items-center justify-center text-white font-black text-xl shadow">
-            J
-          </div>
-          <div>
-            <h1 className="font-extrabold text-xl leading-none text-gray-900 tracking-tight">
-              Jujuy<span className="text-amber-600">Tech</span>
-            </h1>
-            <p className="text-xs text-gray-500 font-medium">Difusión, comunidad y compromiso</p>
-          </div>
-        </button>
+  const enlaces = [["Agenda", "#agenda-title"], ["Mapa 3D", "#mapa-eventos"], ["Comunidad", "#top"], ["Ayuda", "#hacki"]];
+  const usuario = esInvitado ? "Invitado" : email || ROLE_LABELS[auth.rol] || "Mi cuenta";
+  const cerrarMenu = () => setMenuAbierto(false);
 
-        <div className="jt-profilebar">
-          <span id="jt-active-portal">
-            {ROLE_LABELS[auth.rol]}
-            {esInvitado ? " · Invitado" : ""}
-          </span>
-          <span id="jt-active-email" className="text-gray-500">
-            {email}
-          </span>
-          {esInvitado && (
-            <button id="jt-signin-from-guest" type="button" onClick={onPedirLogin}>
-              Iniciar sesión
-            </button>
-          )}
-          <button id="jt-logout" type="button" onClick={auth.salir}>
-            {esInvitado ? "Volver al inicio" : "Cerrar sesión"}
-          </button>
-        </div>
-      </div>
-    </header>
-  );
+  return <header className="site-header">
+    <div className="site-header__inner">
+      <a href="#top" className="brand-lockup" onClick={onIrArriba} aria-label="Ir al inicio de JujuyTech"><span className="brand-lockup__mark">J</span><span><strong>Jujuy<span>Tech</span></strong><small>Difusión, comunidad y compromiso</small></span></a>
+      <button type="button" className="header-menu-button" onClick={() => setMenuAbierto((valor) => !valor)} aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"} aria-expanded={menuAbierto}>{menuAbierto ? <X /> : <Menu />}</button>
+      <nav className={`site-nav ${menuAbierto ? "site-nav--open" : ""}`} aria-label="Navegación principal">{enlaces.map(([texto, href]) => <a key={texto} href={href} onClick={cerrarMenu}>{texto}</a>)}</nav>
+      <div className="site-header__actions"><span className="header-language"><Globe2 aria-hidden="true" /> ES</span><AccessibilityBar a11y={a11y} /><span className="header-user" title={ROLE_LABELS[auth.rol] || "Usuario"}>{usuario}</span>{esInvitado ? <button type="button" className="header-login" onClick={onPedirLogin}>Iniciar sesión</button> : <button type="button" className="header-logout" onClick={auth.salir}>Cerrar sesión</button>}</div>
+    </div>
+  </header>;
 }
