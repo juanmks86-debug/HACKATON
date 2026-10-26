@@ -64,7 +64,7 @@ export default function App() {
         {vista === "municipio" && <MunicipioView eventos={eventos} />}
       </main>
       <Footer />
-      {(vista === "community" || vista === "business") && <HackiWidget />}
+      {(vista === "community" || vista === "business") && <HackiWidget eventos={eventos} />}
     </div>
   );
 }
