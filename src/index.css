@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 /* Tailwind v4: la paleta y la tipografÃ­a se declaran acÃ¡ (antes era tailwind.config.js). */
 @theme {
@@ -789,3 +789,97 @@ html.night-mode .agenda-search input, html.night-mode .agenda-card__title { colo
 html.night-mode .agenda-card__meta, html.night-mode .agenda-card__place { color: #cbd5e1; }
 html.night-mode .agenda-chip { color: #cbd5e1; }.night-mode .agenda-chip--active { background: #f8fafc; color: #0f172a; border-color: #f8fafc; }
 
+
+/* Corrección final de Agenda: columnas fluidas, tarjetas de altura uniforme y texto legible. */
+.agenda-grid {
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+.agenda-card {
+  grid-template-columns: 140px minmax(0, 1fr);
+  height: 100%;
+  min-height: 210px;
+  align-self: stretch;
+}
+.agenda-card__media,
+.agenda-card__media img,
+.agenda-card__placeholder {
+  min-height: 210px;
+  height: 100%;
+}
+.agenda-card__body {
+  min-width: 0;
+  padding: 14px 16px;
+}
+.agenda-card__category {
+  display: -webkit-box;
+  overflow: hidden;
+  min-height: 2.6em;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.agenda-card__title {
+  min-height: 2.5em;
+  margin-top: 5px;
+  margin-bottom: 9px;
+  font-size: 20px;
+  line-height: 1.25;
+}
+.agenda-card__meta,
+.agenda-card__place,
+.agenda-card__price {
+  font-size: 14px;
+}
+.agenda-card__place {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.agenda-card__price {
+  display: -webkit-box;
+  overflow: hidden;
+  min-height: 2.8em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.agenda-card__price svg,
+.agenda-card__place svg {
+  display: inline-block;
+  vertical-align: -3px;
+  margin-right: 2px;
+}
+.agenda-card__actions {
+  margin-top: auto;
+  min-width: 0;
+}
+.agenda-card__details {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.agenda-card__location {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+@media (max-width: 759px) {
+  .agenda-grid {
+    grid-template-columns: 1fr;
+  }
+  .agenda-card {
+    grid-template-columns: 140px minmax(0, 1fr);
+    min-height: 210px;
+  }
+  .agenda-card__media,
+  .agenda-card__media img,
+  .agenda-card__placeholder {
+    min-height: 210px;
+  }
+  .agenda-card__body {
+    padding: 14px 15px;
+  }
+  .agenda-card__location {
+    display: none;
+  }
+}
