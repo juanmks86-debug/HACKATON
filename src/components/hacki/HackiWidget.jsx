@@ -5,6 +5,7 @@ import faq from "../../data/hacki/faq.json";
 
 const avatar = "/assets/hacki/active.png";
 const SALUDO = "¡Hola! Soy Hacki, el asistente de JujuyTech. Te ayudo a encontrar eventos y resolver dudas sobre la agenda.";
+const SALUDO_INICIO = "Hola soy Hacki, ¿Qué hacemos hoy?";
 const AVISO = "Respuestas orientativas. Eventos de ejemplo.";
 const GUARDRAIL = "Todavía no puedo gestionar inscripciones ni recordatorios desde el chat. Puedo orientarte sobre la agenda y compartirte los detalles del evento.";
 const EVENTOS_DEMO = [
@@ -23,6 +24,7 @@ export default function HackiWidget({ eventos = [] }) {
   const [procesando, setProcesando] = useState(false);
   const [grabando, setGrabando] = useState(false);
   const [mensajes, setMensajes] = useState([]);
+  const [inicioEscuchado, setInicioEscuchado] = useState(false);
   const recognitionRef = useRef(null);
   const listaRef = useRef(null);
   const sugerencias = useMemo(() => faq.slice(0, 3), []);
@@ -41,7 +43,22 @@ export default function HackiWidget({ eventos = [] }) {
     window.speechSynthesis.speak(voz);
   }, []);
 
-  const reiniciar = () => { setMensajes([]); setConsulta(""); setProcesando(false); };
+  const reiniciar = () => {
+    window.speechSynthesis?.cancel();
+    setMensajes([]);
+    setConsulta("");
+    setProcesando(false);
+    setInicioEscuchado(true);
+    hablar(SALUDO_INICIO);
+  };
+
+  const abrirChat = () => {
+    setAbierto(true);
+    if (!inicioEscuchado && !mensajes.length) {
+      setInicioEscuchado(true);
+      hablar(SALUDO_INICIO);
+    }
+  };
 
   useEffect(() => {
     const abrirDesdeFooter = () => setAbierto(true);
@@ -103,7 +120,7 @@ export default function HackiWidget({ eventos = [] }) {
     {abierto && <section className="hacki-v2-dialog" aria-label="Chat de Hacki">
       <header className="hacki-v2-header"><div className="hacki-v2-identity"><span className="hacki-v2-avatar"><img src={avatar} alt="" /><i aria-label="Hacki activo" /></span><span><strong>Hacki</strong><small>Asistente de eventos</small></span></div><div className="hacki-v2-controls"><button type="button" onClick={() => hablar(SALUDO)} aria-label="Escuchar saludo de Hacki" title="Escuchar saludo"><Volume2 /></button><button type="button" onClick={reiniciar} aria-label="Reiniciar conversación" title="Reiniciar conversación"><RefreshCw /></button><button type="button" onClick={() => setAbierto(false)} aria-label="Cerrar Hacki" title="Cerrar"><X /></button></div></header>
       <div className="hacki-v2-messages" ref={listaRef}>
-        {!mensajes.length && <><div className="hacki-v2-bubble hacki-v2-bot"><p>{SALUDO}</p></div><p className="hacki-v2-disclaimer"><AlertCircle />{AVISO}</p><div className="hacki-v2-bubble hacki-v2-user"><p>Eventos de ropa próximos</p></div><div className="hacki-v2-bubble hacki-v2-bot"><p>No encontré eventos de ropa en la agenda actual. Estos son los próximos:</p><div className="hacki-v2-events">{recomendados.map((evento) => <EventSuggestion key={evento.id ?? evento.title} evento={evento} onClick={() => setConsulta(evento.title)} />)}</div></div></>}
+        {!mensajes.length && <><div className="hacki-v2-bubble hacki-v2-bot"><p>{SALUDO_INICIO}</p><small className="hacki-v2-welcome-detail">{SALUDO}</small></div><p className="hacki-v2-disclaimer"><AlertCircle />{AVISO}</p></>}
         {mensajes.map((mensaje, index) => <div key={`${mensaje.tipo}-${index}`} className={`hacki-v2-bubble ${mensaje.tipo === "user" ? "hacki-v2-user" : "hacki-v2-bot"}`}><p>{mensaje.texto}</p>{mensaje.mostrarEventos && <div className="hacki-v2-events">{recomendados.map((evento) => <EventSuggestion key={evento.id ?? evento.title} evento={evento} onClick={() => setConsulta(evento.title)} />)}</div>}</div>)}
         {procesando && <div className="hacki-v2-typing" aria-live="polite"><Loader2 /> Hacki está escribiendo<span>···</span></div>}
       </div>
@@ -111,7 +128,7 @@ export default function HackiWidget({ eventos = [] }) {
       <a className="hacki-v2-human" href="mailto:contacto@jujuytech.ar?subject=Ayuda%20con%20JujuyTech"><Headphones />¿No era lo que buscabas? <strong>Hablar con una persona</strong></a>
       <form className="hacki-v2-form" onSubmit={(event) => { event.preventDefault(); responder(consulta); }}><label className="sr-only" htmlFor="hacki-question">Escribí tu pregunta</label><input id="hacki-question" value={consulta} onChange={(event) => setConsulta(event.target.value)} placeholder="Escribí tu pregunta..." /><button type="button" className={grabando ? "is-recording" : ""} onClick={escuchar} aria-label={grabando ? "Detener micrófono" : "Usar micrófono"} title="Usar micrófono"><Mic /></button><button type="submit" className="hacki-v2-send" aria-label="Enviar pregunta" title="Enviar"><Send /></button></form><p className="hacki-v2-footnote">No escribas datos personales en el chat.</p>
     </section>}
-    <button type="button" className="hacki-v2-launcher" onClick={() => setAbierto((valor) => !valor)} aria-expanded={abierto} aria-label={abierto ? "Cerrar chat de Hacki" : "Abrir chat de Hacki"}><span className="hacki-v2-launcher-avatar"><img src={avatar} alt="" /><i /></span><strong>Hacki</strong></button>
+    <button type="button" className="hacki-v2-launcher" onClick={() => abierto ? setAbierto(false) : abrirChat()} aria-expanded={abierto} aria-label={abierto ? "Cerrar chat de Hacki" : "Abrir chat de Hacki"}><span className="hacki-v2-launcher-avatar"><img src={avatar} alt="" /><i /></span><strong>Hacki</strong></button>
   </div>;
 }
 
